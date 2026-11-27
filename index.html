@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DEME">
-<title>DEME – Suivi des Âmes v3.0</title>
+<title>DEME – Suivi des Âmes v3.1</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -678,6 +678,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <li data-page="dashboard" onclick="App.nav('dashboard')">📊 Tableau de bord</li>
       <li data-page="structure" onclick="App.nav('structure')">🏛️ Structure</li>
       <li data-page="evangelists" onclick="App.nav('evangelists')">👤 Évangélistes</li>
+      <li data-page="plans" onclick="App.nav('plans')">📅 Planification</li>
       <li data-page="activities" onclick="App.nav('activities')">🎯 Activités</li>
       <li data-page="souls" onclick="App.nav('souls')">🕊️ Âmes</li>
       <li data-page="stats" onclick="App.nav('stats')">📈 Statistiques</li>
@@ -695,7 +696,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
   <main id="main" class="main"></main>
 
   <footer class="app-footer">
-    <b>DEME · Suivi des Âmes v3.0</b>
+    <b>DEME · Suivi des Âmes v3.1</b>
     Conçu par Jean Marc Olivier KOFFI<br>
     Disciple d'Ettien Antoine EDJA
     <span class="tel">📞 07 47 28 46 94</span>
@@ -726,10 +727,10 @@ input,select,textarea{font-family:inherit;font-size:15px}
    ================================================================ */
 
 const DB_NAME = 'deme_db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const DEFAULT_PASSWORD = 'deme2026';
 const API_URL = localStorage.getItem('deme_api') || 'https://script.google.com/macros/s/AKfycbw9CILCyTzFzk23HgNOC17MVXiXtMjOr8uoAnYF7jRQwTunM78aX6RayV0lWAgzjyhz/exec';
-const SYNC_STORES = ['zones','subcenters','sectors','houses','evangelists','souls','activities'];
+const SYNC_STORES = ['zones','subcenters','sectors','houses','evangelists','souls','activities','plans'];
 
 let db = null;
 let currentUser = null;
@@ -746,11 +747,11 @@ const ROLES = {
 };
 
 const PERMISSIONS = {
-  central:     ['dashboard','activities','structure','evangelists','souls','stats','transfer','settings'],
-  zone:        ['dashboard','activities','structure','evangelists','souls','stats','transfer'],
-  sous:        ['dashboard','activities','structure','evangelists','souls','stats','transfer'],
-  secteur:     ['dashboard','activities','structure','evangelists','souls','stats','transfer'],
-  evangeliste: ['dashboard','activities','souls','stats'],
+  central:     ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer','settings'],
+  zone:        ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer'],
+  sous:        ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer'],
+  secteur:     ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer'],
+  evangeliste: ['dashboard','activities','plans','souls','stats'],
   pasteur:     ['dashboard','souls']
 };
 
@@ -770,6 +771,7 @@ function openDB() {
       if (!d.objectStoreNames.contains('audit'))      d.createObjectStore('audit', { keyPath:'id' });
       if (!d.objectStoreNames.contains('users'))      d.createObjectStore('users', { keyPath:'id' });
       if (!d.objectStoreNames.contains('activities')) d.createObjectStore('activities', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('plans')) d.createObjectStore('plans', { keyPath:'id' });
     };
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e.target.error);
@@ -1054,7 +1056,7 @@ const App = {
     });
     const titles = {
       dashboard:'Tableau de bord', structure:'Structure DEME',
-      evangelists:'Évangélistes', activities:'Activités des évangélistes', souls:'Âmes', stats:'Statistiques',
+      evangelists:'Évangélistes', plans:'Planification', activities:'Activités des évangélistes', souls:'Âmes', stats:'Statistiques',
       transfer:'Import / Export', settings:'Paramètres'
     };
     document.getElementById('pageTitle').textContent = titles[page] || page;
@@ -1065,6 +1067,7 @@ const App = {
         dashboard: () => this.renderDashboard(),
         structure: () => this.renderStructure(),
         evangelists: () => this.renderEvangelists(),
+        plans: () => this.renderPlans(),
         activities: () => this.renderActivities(),
         souls: () => this.renderSouls(),
         stats: () => this.renderStats(),
@@ -2141,6 +2144,7 @@ const App = {
       evangelists: await dbAll('evangelists'),
       souls: await dbAll('souls'),
       activities: await dbAll('activities'),
+      plans: await dbAll('plans'),
       users: await dbAll('users')
     };
     const filename = `deme-export-${todayISO()}.json`;
@@ -2216,7 +2220,7 @@ const App = {
       const existingSouls = await dbAll('souls');
       const keys = new Set(existingSouls.map(s => (s.nom+'|'+(s.tel||'')).toLowerCase()));
 
-      for (const store of ['zones','subcenters','sectors','houses','evangelists','activities','users']) {
+      for (const store of ['zones','subcenters','sectors','houses','evangelists','activities','plans','users']) {
         for (const item of (data[store]||[])) {
           const ex = await dbGet(store, item.id);
           if (!ex) { await dbPut(store, item); imp++; } else skip++;
@@ -2239,7 +2243,7 @@ const App = {
   async resetAll() {
     if (!confirm('Effacer TOUTES les données ?')) return;
     if (!confirm('Confirmation finale ?')) return;
-    for (const st of ['zones','subcenters','sectors','houses','evangelists','activities','souls','audit','users']) {
+    for (const st of ['zones','subcenters','sectors','houses','evangelists','activities','plans','souls','audit','users']) {
       await dbClear(st);
     }
     this.toast('Données effacées');
@@ -2374,6 +2378,7 @@ const App = {
     document.getElementById('main').innerHTML = `
       <div class="btn-row">
         <button class="btn" onclick="App.openActForm()">+ Activité</button>
+        <button class="btn secondary" onclick="App.nav('plans')">📅 Planification</button>
         <button class="btn secondary" onclick="App.openWeekly()">📲 Résumé WhatsApp</button>
         <button class="btn secondary" onclick="App.openObjectives()">🎯 Objectifs</button>
       </div>
@@ -2439,7 +2444,7 @@ const App = {
   },
 
   async openWeekly(start) {
-    const [{ items }, zones, obj] = await Promise.all([this.activityItems(), dbAll('zones'), this.getObjectives()]);
+    const [{ items }, zones, obj, plans] = await Promise.all([this.activityItems(), dbAll('zones'), this.getObjectives(), dbAll('plans')]);
     const d = start ? new Date(start + 'T00:00:00') : new Date();
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     const e = new Date(d); e.setDate(e.getDate() + 6);
@@ -2455,6 +2460,11 @@ const App = {
       return parts.length ? '• ' + z.nom + ' : ' + parts.join(', ') : null;
     }).filter(Boolean);
     if (zl.length) t += '\n*Par zone*\n' + zl.join('\n') + '\n';
+    const nF = this.isoD(new Date(e.getTime() + 864e5)), nT = this.isoD(new Date(e.getTime() + 7 * 864e5));
+    const nx = plans.filter(p => (p.statut === 'programmee' || p.statut === 'reportee') && p.date >= nF && p.date <= nT).sort((a, b) => a.date.localeCompare(b.date));
+    if (nx.length) t += '\n*Programmé la semaine prochaine*\n' + nx.map(p => { const T = this.PLAN_TYPES[p.type] || { icon:'•', label:p.type }; const z = (zones.find(x => x.id === p.zoneId) || {}).nom; return '• ' + this.fmtD(p.date).slice(0, 5) + ' – ' + (p.titre || T.label) + (z ? ' (' + z + ')' : '') + (p.objectif ? ' – objectif ' + this.fmtN(p.objectif) : ''); }).join('\n') + '\n';
+    const nl = plans.filter(p => this.planLate(p)).length;
+    if (nl) t += '\n⚠ Activités en retard : ' + nl + '\n';
     t += '\nGloire à Dieu pour la moisson !';
     this.openModal('Résumé hebdomadaire', `
       <div class="form-group"><label>Semaine du (lundi)</label><input type="date" id="wkDate" value="${from}" onchange="App.openWeekly(this.value)"></div>
@@ -2466,6 +2476,182 @@ const App = {
     const ta = document.getElementById('wkText');
     try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); document.execCommand('copy'); }
     this.toast('Résumé copié');
+  },
+
+
+  /* ============ PLANIFICATION DES ACTIVITÉS ============ */
+  PLAN_TYPES: {
+    traites:{ label:'Distribution des traités', icon:'📜', act:'traites', q:'traités distribués' },
+    terrain:{ label:'Évangélisation de terrain', icon:'🗣️', act:'ame', q:'âmes gagnées' },
+    formation:{ label:'Formation des évangélistes', icon:'🎓', act:'evangeliste_forme', q:'évangélistes formés' },
+    caravane:{ label:'Caravane', icon:'🚐', act:'caravane', q:'caravane(s)', def:1, extras:[['ame','Âmes gagnées'], ['bapteme','Baptêmes']] },
+    bapteme:{ label:'Baptêmes', icon:'💧', act:'bapteme', q:'baptisés' },
+    eglise:{ label:'Implantation Jéricho', icon:'🏠', act:'eglise', q:'église(s) implantée(s)' }
+  },
+  PLAN_STATUS: { programmee:'Programmée', realisee:'Réalisée', reportee:'Reportée', annulee:'Annulée' },
+  canPlan() { return currentUser && currentUser.role !== 'evangeliste' && currentUser.role !== 'pasteur'; },
+  planPending(p) { return p.statut === 'programmee' || p.statut === 'reportee'; },
+  planLate(p) { return this.planPending(p) && (p.dateFin || p.date) < this.isoD(new Date()); },
+  addDays(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return this.isoD(d); },
+  diffDays(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5); },
+  setPlanFilter(k) { App._plFilter = k; this.renderPlans(); },
+
+  async renderPlans() {
+    const [plans, zones, evs] = await Promise.all([dbAll('plans'), dbAll('zones'), dbAll('evangelists')]);
+    const f = App._plFilter || 'avenir';
+    const late = plans.filter(p => this.planLate(p));
+    const upcoming = plans.filter(p => this.planPending(p) && !this.planLate(p));
+    const done = plans.filter(p => p.statut === 'realisee');
+    const cancelled = plans.filter(p => p.statut === 'annulee');
+    const rate = (done.length + late.length) ? Math.round(done.length * 100 / (done.length + late.length)) : null;
+    const lists = { avenir:upcoming, retard:late, realisees:done, annulees:cancelled, toutes:plans };
+    const rows = (lists[f] || upcoming).slice().sort((a, b) => f === 'realisees' ? (b.date || '').localeCompare(a.date || '') : (a.date || '').localeCompare(b.date || ''));
+    const tabs = [['avenir', 'À venir', upcoming.length], ['retard', 'En retard', late.length], ['realisees', 'Réalisées', done.length], ['annulees', 'Annulées', cancelled.length], ['toutes', 'Toutes', plans.length]];
+    const zn = id => (zones.find(z => z.id === id) || {}).nom;
+    const en = id => { const e = evs.find(x => x.id === id); return e ? (e.nom + ' ' + (e.prenom || '')).trim() : ''; };
+    const card = p => {
+      const T = this.PLAN_TYPES[p.type] || { icon:'•', label:p.type, q:'' };
+      const lt = this.planLate(p);
+      const col = lt ? '#c0392b' : { programmee:'#1a5490', realisee:'#2e8b57', reportee:'#e8a020', annulee:'#888' }[p.statut];
+      const lab = lt ? 'En retard' : this.PLAN_STATUS[p.statut];
+      const when = this.fmtD(p.date) + (p.dateFin ? ' → ' + this.fmtD(p.dateFin) : '') + (p.heure ? ' · ' + p.heure : '');
+      const who = [zn(p.zoneId) ? '🏢 ' + zn(p.zoneId) : '', en(p.evId) ? '👤 ' + en(p.evId) : '', p.equipe ? '👥 ' + p.equipe : ''].filter(Boolean).map(x => this.esc(x)).join(' · ');
+      let res = '';
+      if (p.statut === 'realisee') res = `<div style="font-size:13px;margin-top:4px">✅ Réalisé : <b>${this.fmtN(p.realise)}</b> ${T.q}${p.objectif ? ' / objectif ' + this.fmtN(p.objectif) : ''}${p.cr ? '<br><i>' + this.esc(p.cr) + '</i>' : ''}</div>`;
+      else if (p.objectif) res = `<div style="font-size:13px;margin-top:4px">🎯 Objectif : <b>${this.fmtN(p.objectif)}</b> ${T.q}</div>`;
+      if (p.motif) res += `<div style="font-size:12px;color:var(--muted)">Motif : ${this.esc(p.motif)}</div>`;
+      let btn = '';
+      if (this.canPlan()) {
+        btn = this.planPending(p)
+          ? `<button class="btn small" onclick="App.openClosePlan('${p.id}')">✅ Clôturer</button><button class="btn small secondary" onclick="App.openPostpone('${p.id}')">🔁 Reporter</button><button class="btn small secondary" onclick="App.cancelPlan('${p.id}')">✖ Annuler</button>`
+          : `<button class="btn small secondary" onclick="App.reopenPlan('${p.id}')">↩ Rouvrir</button>`;
+        btn += `<button class="btn small secondary" onclick="App.openPlanForm('${p.id}')">✏️</button><button class="btn small danger" onclick="App.deletePlan('${p.id}')">🗑️</button>`;
+      }
+      return `<div class="card" style="border-left:4px solid ${col}">
+        <div style="display:flex;justify-content:space-between;gap:8px"><div style="font-weight:700">${T.icon} ${this.esc(p.titre || T.label)}</div><span style="font-size:11px;background:${col};color:#fff;border-radius:10px;padding:2px 8px;white-space:nowrap;height:fit-content">${lab}</span></div>
+        <div style="font-size:13px;color:var(--muted)">📅 ${when}${p.lieu ? ' · 📍 ' + this.esc(p.lieu) : ''}</div>
+        ${who ? `<div style="font-size:13px;color:var(--muted)">${who}</div>` : ''}${res}
+        ${btn ? `<div class="btn-row" style="margin-top:8px">${btn}</div>` : ''}</div>`;
+    };
+    document.getElementById('main').innerHTML = `
+      ${this.canPlan() ? '<div class="btn-row"><button class="btn" onclick="App.openPlanForm()">+ Activité programmée</button></div>' : ''}
+      <div class="card" style="font-size:13px">Taux de réalisation : <b>${rate === null ? '—' : rate + ' %'}</b> <span style="color:var(--muted)">(réalisées ÷ réalisées + en retard)</span></div>
+      <div class="btn-row" style="flex-wrap:wrap">${tabs.map(t => `<button class="btn small ${f === t[0] ? '' : 'secondary'}" onclick="App.setPlanFilter('${t[0]}')">${t[1]} (${t[2]})</button>`).join('')}</div>
+      ${rows.length ? rows.map(card).join('') : '<div class="empty"><div class="icon">📅</div><div class="msg">Aucune activité dans cette liste</div></div>'}`;
+  },
+
+  async openPlanForm(id) {
+    const [zones, evs] = await Promise.all([dbAll('zones'), dbAll('evangelists')]);
+    const p = id ? await dbGet('plans', id) : {};
+    App._editPlan = id || null;
+    const opt = (arr, sel, f) => arr.map(x => `<option value="${x.id}" ${x.id === sel ? 'selected' : ''}>${this.esc(f(x))}</option>`).join('');
+    this.openModal(id ? 'Modifier l\'activité' : 'Programmer une activité', `
+      <div class="form-group"><label class="form-required">Type</label><select id="pType">${Object.entries(this.PLAN_TYPES).map(([k, t]) => `<option value="${k}" ${k === p.type ? 'selected' : ''}>${t.icon} ${t.label}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Titre (facultatif)</label><input id="pTitre" value="${this.esc(p.titre || '')}"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-required">Date</label><input type="date" id="pDate" value="${p.date || this.isoD(new Date())}"></div>
+        <div class="form-group"><label>Heure</label><input type="time" id="pHeure" value="${p.heure || ''}"></div>
+      </div>
+      <div class="form-group"><label>Date de fin (si plusieurs jours)</label><input type="date" id="pFin" value="${p.dateFin || ''}"></div>
+      <div class="form-group"><label>Lieu</label><input id="pLieu" value="${this.esc(p.lieu || '')}"></div>
+      <div class="form-group"><label>Zone</label><select id="pZone"><option value="">—</option>${opt(zones, p.zoneId, z => z.nom)}</select></div>
+      <div class="form-group"><label>Responsable</label><select id="pEv"><option value="">—</option>${opt(evs, p.evId, e => (e.nom + ' ' + (e.prenom || '')).trim())}</select></div>
+      <div class="form-group"><label>Équipe mobilisée</label><input id="pEquipe" placeholder="Noms ou nombre de personnes" value="${this.esc(p.equipe || '')}"></div>
+      <div class="form-group"><label>Objectif chiffré</label><input type="number" min="0" id="pObj" value="${p.objectif || ''}"></div>
+      ${id ? '' : `<div class="form-row"><div class="form-group"><label>Répétition</label><select id="pRep"><option value="">Aucune</option><option value="w">Chaque semaine</option></select></div>
+        <div class="form-group"><label>Jusqu'au</label><input type="date" id="pUntil"></div></div>`}
+      <button class="btn full" onclick="App.savePlan()">Enregistrer</button>`);
+  },
+  async savePlan() {
+    const g = k => document.getElementById(k).value;
+    const date = g('pDate');
+    if (!date) return this.toast('Date requise');
+    const fin = g('pFin');
+    if (fin && fin < date) return this.toast('La date de fin est avant la date de début');
+    const base = { type:g('pType'), titre:g('pTitre').trim(), heure:g('pHeure'), lieu:g('pLieu').trim(), zoneId:g('pZone'), evId:g('pEv'), equipe:g('pEquipe').trim(), objectif:parseInt(g('pObj'), 10) || 0 };
+    if (App._editPlan) {
+      const old = await dbGet('plans', App._editPlan);
+      await dbPut('plans', { ...old, ...base, date, dateFin:fin });
+      await this.log('update', 'Plan: ' + base.type);
+    } else {
+      const rep = document.getElementById('pRep').value, until = g('pUntil');
+      if (rep === 'w' && (!until || until < date)) return this.toast('Indiquez la date de fin de la répétition');
+      const span = fin ? this.diffDays(date, fin) : 0, gid = rep ? uid() : '';
+      let d = date, n = 0;
+      do {
+        await dbPut('plans', { ...base, id:uid(), date:d, dateFin:fin ? this.addDays(d, span) : '', statut:'programmee', groupId:gid, createdBy:currentUser ? currentUser.name : '' });
+        n++; d = this.addDays(d, 7);
+      } while (rep === 'w' && d <= until && n < 60);
+      await this.log('create', 'Plan: ' + base.type + ' ×' + n);
+    }
+    App._editPlan = null; this.closeModal(); this.toast('Enregistré'); this.nav('plans');
+  },
+
+  async dropPlanActs(p) { for (const a of (p.actIds || [])) await dbDel('activities', a); },
+  async openClosePlan(id) {
+    const p = await dbGet('plans', id); if (!p) return;
+    const T = this.PLAN_TYPES[p.type] || { q:'', extras:[] };
+    this.openModal('Clôturer : ' + (p.titre || T.label), `
+      <div class="form-group"><label class="form-required">Date de réalisation</label><input type="date" id="cDate" value="${p.dateFin || p.date}"></div>
+      <div class="form-group"><label class="form-required">Résultat : ${T.q}</label><input type="number" min="0" id="cQty" value="${p.objectif || T.def || ''}"></div>
+      ${(T.extras || []).map(x => `<div class="form-group"><label>${x[1]} (facultatif)</label><input type="number" min="0" id="cx_${x[0]}"></div>`).join('')}
+      <div class="form-group"><label>Compte rendu</label><textarea id="cNote" rows="3" style="width:100%">${this.esc(p.cr || '')}</textarea></div>
+      <button class="btn full" onclick="App.saveClosePlan('${id}')">Enregistrer le compte rendu</button>`);
+  },
+  async saveClosePlan(id) {
+    const p = await dbGet('plans', id); if (!p) return;
+    const T = this.PLAN_TYPES[p.type];
+    const date = document.getElementById('cDate').value;
+    const qty = parseInt(document.getElementById('cQty').value, 10);
+    if (!date || isNaN(qty) || qty < 0) return this.toast('Date et résultat requis');
+    await this.dropPlanActs(p);
+    const ids = [], mk = async (type, q) => {
+      if (!(q > 0)) return;
+      const a = { id:uid(), type, date, qty:q, zoneId:p.zoneId || '', evId:p.evId || '', note:p.titre || T.label, planId:p.id, by:currentUser ? currentUser.name : '', createdAt:new Date().toISOString() };
+      await dbPut('activities', a); ids.push(a.id);
+    };
+    await mk(T.act, qty);
+    for (const x of (T.extras || [])) await mk(x[0], parseInt(document.getElementById('cx_' + x[0]).value, 10));
+    await dbPut('plans', { ...p, statut:'realisee', realise:qty, realiseDate:date, cr:document.getElementById('cNote').value.trim(), actIds:ids });
+    await this.log('update', 'Plan clôturé: ' + p.type);
+    this.closeModal(); this.toast('Compte rendu enregistré'); this.nav('plans');
+  },
+  async openPostpone(id) {
+    const p = await dbGet('plans', id); if (!p) return;
+    this.openModal('Reporter l\'activité', `<div class="form-group"><label class="form-required">Nouvelle date</label><input type="date" id="rDate" value="${p.date}"></div>
+      <div class="form-group"><label>Motif</label><input id="rMotif"></div><button class="btn full" onclick="App.savePostpone('${id}')">Reporter</button>`);
+  },
+  async savePostpone(id) {
+    const p = await dbGet('plans', id); const d = document.getElementById('rDate').value;
+    if (!d) return this.toast('Date requise');
+    const delta = this.diffDays(p.date, d);
+    await dbPut('plans', { ...p, statut:'reportee', datePrevue:p.datePrevue || p.date, date:d, dateFin:p.dateFin ? this.addDays(p.dateFin, delta) : '', motif:document.getElementById('rMotif').value.trim() });
+    this.closeModal(); this.toast('Activité reportée'); this.nav('plans');
+  },
+  async cancelPlan(id) {
+    const m = prompt('Motif de l\'annulation (facultatif) :'); if (m === null) return;
+    const p = await dbGet('plans', id);
+    await dbPut('plans', { ...p, statut:'annulee', motif:m.trim() });
+    this.toast('Activité annulée'); this.nav('plans');
+  },
+  async reopenPlan(id) {
+    const p = await dbGet('plans', id);
+    if (!confirm('Rouvrir cette activité ?' + ((p.actIds || []).length ? '\nLes résultats enregistrés pour elle seront retirés des statistiques.' : ''))) return;
+    await this.dropPlanActs(p);
+    await dbPut('plans', { ...p, statut:'programmee', realise:0, realiseDate:'', cr:'', actIds:[], motif:'' });
+    this.toast('Activité rouverte'); this.nav('plans');
+  },
+  async deletePlan(id) {
+    const p = await dbGet('plans', id); if (!p) return;
+    if (!confirm('Supprimer cette activité programmée ?' + ((p.actIds || []).length ? '\nSes résultats seront aussi retirés des statistiques.' : ''))) return;
+    let more = [];
+    if (p.groupId) {
+      more = (await dbAll('plans')).filter(x => x.groupId === p.groupId && x.id !== p.id && x.statut === 'programmee' && x.date > p.date);
+      if (more.length && !confirm('Supprimer aussi les ' + more.length + ' autres occurrences à venir de cette série ?')) more = [];
+    }
+    await this.dropPlanActs(p); await dbDel('plans', id);
+    for (const x of more) await dbDel('plans', x.id);
+    this.toast('Supprimé'); this.nav('plans');
   },
 
   /* ============ PARAMÈTRES ============ */
@@ -2547,7 +2733,7 @@ const App = {
       <div class="card">
         <h3>ℹ️ À propos</h3>
         <p style="font-size:13px;color:var(--muted);line-height:1.7">
-          <b>DEME — Suivi des Âmes v3.0</b><br>
+          <b>DEME — Suivi des Âmes v3.1</b><br>
           Département de l'École et du Ministère des Évangélistes<br>
           Communauté Missionnaire Internationale Côte d'Ivoire<br><br>
           Application 100% hors-ligne (IndexedDB)<br>
