@@ -937,10 +937,16 @@ const App = {
   },
 
   addServerLink() {
+    const box = document.querySelector('#loginScreen .login-box'); if (!box) return;
+    if (API_URL) {
+      document.querySelectorAll('#loginScreen .btn.secondary.full, #loginHint').forEach(e => { e.style.display = 'none'; });
+      const p = document.getElementById('loginPassword'); if (p) p.placeholder = 'Mot de passe du compte « central »';
+      const c = document.getElementById('loginUserCode'); if (c) c.placeholder = 'Mot de passe';
+    }
     const d = document.createElement('div');
-    d.style.cssText = 'text-align:center;margin:14px 0;font-size:13px';
-    d.innerHTML = '<a href="#" style="color:inherit" onclick="App.setServer();return false">🌐 Serveur : ' + (API_URL ? 'connecté (modifier)' : 'non configuré (mode local)') + '</a>';
-    document.getElementById('loginScreen').appendChild(d);
+    d.style.cssText = 'text-align:center;margin-top:12px;font-size:11px;opacity:.6';
+    d.innerHTML = '<a href="#" style="color:inherit" onclick="App.setServer();return false">🌐 ' + (API_URL ? 'Serveur connecté' : 'Mode local · configurer le serveur') + '</a>';
+    box.insertBefore(d, box.querySelector('.login-signature'));
   },
   setServer() {
     const v = prompt('Adresse du serveur DEME (URL Apps Script ; vide = mode local) :', API_URL);
