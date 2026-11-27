@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DEME">
-<title>DEME – Suivi des Âmes v3.2</title>
+<title>DEME – Suivi des Âmes v3.3</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -698,7 +698,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
   <main id="main" class="main"></main>
 
   <footer class="app-footer">
-    <b>DEME · Suivi des Âmes v3.2</b>
+    <b>DEME · Suivi des Âmes v3.3</b>
     Conçu par Jean Marc Olivier KOFFI<br>
     Disciple d'Ettien Antoine EDJA
     <span class="tel">📞 07 47 28 46 94</span>
@@ -745,7 +745,10 @@ const ROLES = {
   sous:         { label:'Responsable Sous-centre', short:'SOUS-CENTRE', order:2 },
   secteur:      { label:'Responsable de Secteur', short:'SECTEUR', order:3 },
   evangeliste:  { label:'Évangéliste', short:'ÉVANGÉLISTE',        order:4 },
-  pasteur:      { label:'Pasteur / Resp. Assemblée', short:'PASTEUR', order:5 }
+  pasteur:      { label:'Pasteur / Resp. Assemblée', short:'PASTEUR', order:5 },
+  ecole:        { label:"Responsable de l'École", short:'ÉCOLE', order:1 },
+  equipe:       { label:"Responsable d'équipe", short:'ÉQUIPE', order:3 },
+  tresorier:    { label:'Trésorier', short:'TRÉSORIER', order:1 }
 };
 
 const PERMISSIONS = {
@@ -754,6 +757,9 @@ const PERMISSIONS = {
   sous:        ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
   secteur:     ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
   evangeliste: ['dashboard','activities','plans','prayer','fasting','souls','stats'],
+  ecole:       ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats'],
+  equipe:      ['dashboard','activities','plans','prayer','fasting','evangelists','souls','stats'],
+  tresorier:   ['dashboard'],
   pasteur:     ['dashboard','souls']
 };
 
@@ -901,6 +907,7 @@ const Sync = {
       localStorage.setItem('deme_since', String(since));
     } catch (e) { this.busy = false; this.pill('⚠ ' + (e.message || 'Erreur')); return; }
     this.busy = false; this.pill('✅ À jour');
+    try { await App.seedZones(); await App.migrateScope(); } catch (e) {}
     if (changed && document.getElementById('modal').classList.contains('hidden')) App.nav(currentPage);
   },
   async start() {
@@ -1032,7 +1039,7 @@ const App = {
     });
 
     this.nav('dashboard');
-    if (API_URL) Sync.start();
+    if (API_URL) Sync.start(); else this.seedZones();
   },
 
   toggleMenu() {
@@ -1323,8 +1330,7 @@ const App = {
 
     let html = `
       <div class="btn-row">
-        <button class="btn" onclick="App.openZoneForm()">+ Zone</button>
-        <button class="btn secondary" onclick="App.openZonesBulk()">+ Plusieurs zones</button>
+        ${this.isNational() ? `<button class="btn" onclick="App.openZoneForm()">+ Zone</button><button class="btn secondary" onclick="App.openZonesBulk()">+ Plusieurs zones</button><button class="btn secondary" onclick="App.loadAbidjanZones()">+ Zones d’Abidjan</button>` : ''}
         <button class="btn secondary" onclick="App.openSubForm()">+ Sous-centre</button>
         <button class="btn secondary" onclick="App.openSectForm()">+ Secteur</button>
         <button class="btn secondary" onclick="App.openHouseForm()">+ Assemblée</button>
@@ -1406,7 +1412,8 @@ const App = {
     const nom = document.getElementById('sName').value.trim();
     const subId = document.getElementById('sSub').value;
     if (!nom) return this.toast('Nom requis');
-    await dbPut('sectors', { id:uid(), nom, subId, date:new Date().toISOString() });
+    const sb0 = await dbGet('subcenters', subId);
+    await dbPut('sectors', { id:uid(), nom, subId, zoneId: sb0 ? sb0.zoneId : '', date:new Date().toISOString() });
     this.closeModal(); this.toast('Secteur créé'); this.nav('structure');
   },
 
@@ -1424,7 +1431,8 @@ const App = {
     const nom = document.getElementById('hName').value.trim();
     const sectId = document.getElementById('hSect').value;
     if (!nom) return this.toast('Nom requis');
-    await dbPut('houses', { id:uid(), nom, sectId, date:new Date().toISOString() });
+    const sc0 = await dbGet('sectors', sectId);
+    await dbPut('houses', { id:uid(), nom, sectId, zoneId: sc0 ? (sc0.zoneId || '') : '', date:new Date().toISOString() });
     this.closeModal(); this.toast('Assemblée créée'); this.nav('structure');
   },
 
@@ -1468,6 +1476,7 @@ const App = {
   async openEvangelistForm(id) {
     const ev = id ? await dbGet('evangelists', id) : null;
     const zonesL = await dbAll('zones');
+    App._evL = { subs: await dbAll('subcenters'), sects: await dbAll('sectors'), houses: await dbAll('houses') };
     this.openModal(ev ? 'Modifier l\'évangéliste' : 'Nouvel Évangéliste', `
       <div class="photo-upload">
         <div class="photo-preview" id="evPhotoPreview">📷</div>
@@ -1486,7 +1495,15 @@ const App = {
         <div class="form-group"><label>Date de naissance</label><input type="date" id="evDdn"></div>
       </div>
       <div class="form-group"><label>Téléphone</label><input type="tel" id="evTel"></div>
-      <div class="form-group"><label>Zone d'affectation</label><select id="evZone"><option value="">—</option>${zonesL.map(z=>`<option value="${z.id}">${this.esc(z.nom)}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Zone d'affectation</label><select id="evZone" onchange="App.evCascade('zone')"><option value="">—</option>${zonesL.map(z=>`<option value="${z.id}">${this.esc(z.nom)}</option>`).join('')}</select></div>
+      <div class="form-row"><div class="form-group"><label>Sous-centre</label><select id="evSub" onchange="App.evCascade('sub')"></select></div>
+      <div class="form-group"><label>Secteur</label><select id="evSect" onchange="App.evCascade('sect')"></select></div></div>
+      <div class="form-group"><label>Assemblée de rattachement</label><select id="evHouse"></select></div>
+      <div class="form-row"><div class="form-group"><label>Promotion / formation</label><input id="evPromo"></div>
+      <div class="form-group"><label>Formation</label><select id="evFormStatut"><option value="">Non renseignée</option><option value="en_cours">En cours</option><option value="terminee">Terminée</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Fin de formation</label><input type="date" id="evFormFin"></div>
+      <div class="form-group"><label>Objectif annuel (âmes)</label><input type="number" min="1" id="evObj" value="50"></div></div>
+      <div class="form-group"><label>Nom de connexion (compte DEME)</label><input id="evLogin" placeholder="facultatif"></div>
       <div class="form-row">
         <div class="form-group"><label>Niveau d'affectation</label>
           <select id="evNiveau"><option>Zone</option><option>Sous-centre</option><option>Secteur</option></select></div>
@@ -1495,11 +1512,19 @@ const App = {
       <button class="btn full" onclick="App.saveEvangelist()">Enregistrer</button>
     `);
     App._photo = null; App._editEv = null;
+    this.evCascade('zone');
+    if (!ev && this.isScoped()) { document.getElementById('evZone').value = currentUser.zoneId || ''; this.evCascade('zone'); }
     if (ev) {
       App._editEv = ev.id; App._photo = ev.photo || null;
       const set = (k, v) => { document.getElementById(k).value = v || ''; };
       set('evNom', ev.nom); set('evPrenom', ev.prenom); set('evSexe', ev.sexe); set('evDdn', ev.ddn);
-      set('evTel', ev.tel); set('evZone', ev.zoneId); set('evNiveau', ev.niveau); set('evEntree', ev.entree);
+      set('evTel', ev.tel); set('evNiveau', ev.niveau); set('evEntree', ev.entree);
+      set('evZone', ev.zoneId); this.evCascade('zone');
+      set('evSub', ev.subId); this.evCascade('sub');
+      set('evSect', ev.sectId); this.evCascade('sect');
+      set('evHouse', ev.houseId);
+      set('evPromo', ev.promotion); set('evFormStatut', ev.formStatut); set('evFormFin', ev.formFin);
+      set('evObj', ev.objectifAnnuel || 50); set('evLogin', ev.login);
       if (ev.photo) document.getElementById('evPhotoPreview').innerHTML = '<img src="' + ev.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
     }
   },
@@ -1508,7 +1533,10 @@ const App = {
     if (!nom) return this.toast('Nom requis');
     const old = App._editEv ? await dbGet('evangelists', App._editEv) : null;
     await dbPut('evangelists', {
-      ...(old || {}), id: old ? old.id : uid(), nom, zoneId: document.getElementById('evZone').value,
+      ...(old || {}), id: old ? old.id : uid(), nom, zoneId: this.forceZone(document.getElementById('evZone').value),
+      subId: document.getElementById('evSub').value, sectId: document.getElementById('evSect').value, houseId: document.getElementById('evHouse').value,
+      promotion: document.getElementById('evPromo').value.trim(), formStatut: document.getElementById('evFormStatut').value, formFin: document.getElementById('evFormFin').value,
+      objectifAnnuel: parseInt(document.getElementById('evObj').value, 10) || 50, login: document.getElementById('evLogin').value.trim(),
       prenom: document.getElementById('evPrenom').value.trim(),
       sexe: document.getElementById('evSexe').value,
       ddn: document.getElementById('evDdn').value,
@@ -1557,7 +1585,7 @@ const App = {
       </div>
 
       <div class="btn-row">
-        <button class="btn secondary" onclick="App.openEvangelistForm('${id}')">✏️ Modifier</button> <button class="btn danger" onclick="App.deleteEvangelist('${id}')">🗑️ Supprimer</button>
+        <button class="btn secondary" onclick="App.openEvFiche('${id}')">📋 Fiche</button> <button class="btn secondary" onclick="App.openEvangelistForm('${id}')">✏️ Modifier</button> <button class="btn danger" onclick="App.deleteEvangelist('${id}')">🗑️ Supprimer</button>
       </div>
     `);
   },
@@ -1635,7 +1663,11 @@ const App = {
     return '<span class="tag gray">Nouvelle</span>';
   },
 
-  openSoulForm() {
+  async openSoulForm() {
+    this.openSoulFormBase();
+    await this.fillSoulEv();
+  },
+  openSoulFormBase() {
     this.openModal('Nouvelle Âme', `
       <div class="photo-upload">
         <div class="photo-preview" id="sPhotoPreview">📷</div>
@@ -1655,6 +1687,7 @@ const App = {
       </div>
       <div class="form-group"><label>Lieu d'habitation</label><input id="sHabitat"></div>
       <div class="form-group"><label>Téléphone</label><input type="tel" id="sTel"></div>
+      <div class="form-group"><label>Évangéliste responsable</label><select id="sEv"><option value="">—</option></select></div>
       <div class="form-group"><label class="form-required">Date de conduite à Christ</label>
         <input type="date" id="sConduite" value="${todayISO()}"></div>
       <button class="btn full" onclick="App.saveSoul()">Enregistrer</button>
@@ -1667,6 +1700,10 @@ const App = {
     if (!nom) return this.toast('Nom requis');
     if (!conduite) return this.toast('Date de conduite requise');
 
+    const evSel = document.getElementById('sEv') ? document.getElementById('sEv').value : '';
+    let evR = evSel ? await dbGet('evangelists', evSel) : null;
+    if (!evR && currentUser.role === 'evangeliste') evR = (await dbAll('evangelists')).find(e => e.login && e.login.toLowerCase() === currentUser.name.toLowerCase()) || null;
+    const soulZone = this.forceZone(evR ? (evR.zoneId || '') : '');
     const soul = {
       id: uid(), nom,
       prenoms: document.getElementById('sPrenoms').value.trim(),
@@ -1677,7 +1714,7 @@ const App = {
       photo: App._photo || null,
       conduiteDate: conduite,
       statut: 'en_cours',
-      evangelisteId: currentUser.role === 'evangeliste' ? currentUser.id : null,
+      evangelisteId: evR ? evR.id : null, zoneId: soulZone,
       parcours: {
         conduite: { date: conduite, evangelisteId: currentUser.name },
         repentance: null, bapteme: null, premiereAdoration: null,
@@ -2261,6 +2298,7 @@ const App = {
 
   /* ============ STRUCTURE : MODIFIER / SUPPRIMER ============ */
   nodeBtns(store, id) {
+    if (store === 'zones' && !this.isNational()) return '';
     return `<span style="float:right;white-space:nowrap"><button class="btn small secondary" style="padding:2px 8px" onclick="App.editNode('${store}','${id}')">✏️</button> <button class="btn small danger" style="padding:2px 8px" onclick="App.deleteNode('${store}','${id}')">🗑️</button></span>`;
   },
   async editNode(store, id) {
@@ -2280,6 +2318,8 @@ const App = {
     const pf = { subcenters:'zoneId', sectors:'subId', houses:'sectId' }[store];
     const pe = document.getElementById('nParent');
     n.nom = nom; if (pf && pe) n[pf] = pe.value;
+    if (store === 'sectors') { const sb = await dbGet('subcenters', n.subId); if (sb) n.zoneId = sb.zoneId; }
+    if (store === 'houses') { const sc = await dbGet('sectors', n.sectId); if (sc) n.zoneId = sc.zoneId || ''; }
     await dbPut(store, n); await this.log('update', store + ': ' + nom);
     this.closeModal(); this.toast('Modifié'); this.nav('structure');
   },
@@ -2326,6 +2366,7 @@ const App = {
     evangeliste_forme:{ label:'Évangélistes formés', icon:'🎓', short:'Formés' },
     ame:{ label:'Croyants gagnés', icon:'🕊️', short:'Âmes' },
     bapteme:{ label:'Baptêmes', icon:'💧', short:'Baptêmes' },
+    brisement:{ label:'Brisement des liens', icon:'⛓️', short:'Brisement' },
     caravane:{ label:'Caravanes d\'évangélisation', icon:'🚐', short:'Caravanes' },
     eglise:{ label:'Églises de maison (Jéricho)', icon:'🏠', short:'Églises' }
   },
@@ -2345,9 +2386,11 @@ const App = {
     const [acts, souls] = await Promise.all([dbAll('activities'), dbAll('souls')]);
     const items = acts.map(a => ({ type:a.type, date:a.date, qty:+a.qty || 0, zoneId:a.zoneId || '', evId:a.evId || '' }));
     souls.forEach(s => {
-      if (s.conduiteDate) items.push({ type:'ame', date:s.conduiteDate, qty:1, zoneId:'', evId:s.evangelisteId || '' });
+      if (s.conduiteDate) items.push({ type:'ame', date:s.conduiteDate, qty:1, zoneId:s.zoneId || '', evId:s.evangelisteId || '' });
       const b = s.parcours && s.parcours.bapteme;
-      if (b) items.push({ type:'bapteme', date:(b.date || s.conduiteDate || ''), qty:1, zoneId:'', evId:s.evangelisteId || '' });
+      if (b) items.push({ type:'bapteme', date:(b.date || s.conduiteDate || ''), qty:1, zoneId:s.zoneId || '', evId:s.evangelisteId || '' });
+      const br = s.parcours && s.parcours.brisement;
+      if (br) items.push({ type:'brisement', date:(br.date || s.conduiteDate || ''), qty:1, zoneId:s.zoneId || '', evId:s.evangelisteId || '' });
     });
     return { acts, items };
   },
@@ -2424,7 +2467,7 @@ const App = {
     const old = App._editAct ? await dbGet('activities', App._editAct) : null;
     await dbPut('activities', {
       ...(old || {}), id: old ? old.id : uid(), type: document.getElementById('aType').value, date, qty,
-      zoneId: document.getElementById('aZone').value, evId: document.getElementById('aEv').value,
+      zoneId: this.forceZone(document.getElementById('aZone').value), evId: document.getElementById('aEv').value,
       note: document.getElementById('aNote').value.trim(), by: currentUser ? currentUser.name : '',
       createdAt: old ? old.createdAt : new Date().toISOString()
     });
@@ -2502,10 +2545,14 @@ const App = {
     formation:{ label:'Formation des évangélistes', icon:'🎓', act:'evangeliste_forme', q:'évangélistes formés' },
     caravane:{ label:'Caravane', icon:'🚐', act:'caravane', q:'caravane(s)', def:1, extras:[['ame','Âmes gagnées'], ['bapteme','Baptêmes']] },
     bapteme:{ label:'Baptêmes', icon:'💧', act:'bapteme', q:'baptisés' },
+    brisement:{ label:'Session de brisement des liens', icon:'⛓️', act:'brisement', q:'personnes accompagnées' },
     eglise:{ label:'Implantation Jéricho', icon:'🏠', act:'eglise', q:'église(s) implantée(s)' }
   },
   PLAN_STATUS: { programmee:'Programmée', realisee:'Réalisée', reportee:'Reportée', annulee:'Annulée' },
-  canPlan() { return currentUser && currentUser.role !== 'evangeliste' && currentUser.role !== 'pasteur'; },
+  canPlan() { return currentUser && ['evangeliste', 'pasteur', 'tresorier'].indexOf(currentUser.role) < 0; },
+  isNational() { return !!currentUser && (currentUser.role === 'central' || currentUser.role === 'ecole'); },
+  isScoped() { return !!currentUser && !this.isNational() && currentUser.role !== 'tresorier'; },
+  forceZone(v) { return this.isScoped() ? (currentUser.zoneId || '') : (v || ''); },
   planPending(p) { return p.statut === 'programmee' || p.statut === 'reportee'; },
   planLate(p) { return this.planPending(p) && (p.dateFin || p.date) < this.isoD(new Date()); },
   addDays(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return this.isoD(d); },
@@ -2584,7 +2631,7 @@ const App = {
     if (!date) return this.toast('Date requise');
     const fin = g('pFin');
     if (fin && fin < date) return this.toast('La date de fin est avant la date de début');
-    const base = { type:g('pType'), titre:g('pTitre').trim(), heure:g('pHeure'), lieu:g('pLieu').trim(), zoneId:g('pZone'), evId:g('pEv'), equipe:g('pEquipe').trim(), objectif:parseInt(g('pObj'), 10) || 0 };
+    const base = { type:g('pType'), titre:g('pTitre').trim(), heure:g('pHeure'), lieu:g('pLieu').trim(), zoneId:this.forceZone(g('pZone')), evId:g('pEv'), equipe:g('pEquipe').trim(), objectif:parseInt(g('pObj'), 10) || 0 };
     if (App._editPlan) {
       const old = await dbGet('plans', App._editPlan);
       await dbPut('plans', { ...old, ...base, date, dateFin:fin });
@@ -2738,7 +2785,7 @@ const App = {
     if (part < 1) return this.toast('Nombre de participants requis');
     const old = App._editPray ? await dbGet('prayers', App._editPray) : null;
     await dbPut('prayers', { ...(old || {}), id: old ? old.id : uid(), date:g('pyDate'), debut, fin, minutes, participants:part,
-      sujets:Array.from(document.querySelectorAll('.pySubj:checked')).map(c => c.value), zoneId:g('pyZone'), evId:g('pyEv'), planId:g('pyPlan'), note:g('pyNote').trim(),
+      sujets:Array.from(document.querySelectorAll('.pySubj:checked')).map(c => c.value), zoneId:this.forceZone(g('pyZone')), evId:g('pyEv'), planId:g('pyPlan'), note:g('pyNote').trim(),
       by: currentUser ? currentUser.name : '', createdAt: old ? old.createdAt : new Date().toISOString() });
     await this.log(old ? 'update' : 'create', 'Séance de prière');
     App._editPray = null; this.closeModal(); this.toast('Enregistré'); this.nav('prayer');
@@ -2768,10 +2815,10 @@ const App = {
         <div style="font-size:13px;color:var(--muted)">${this.esc(c.but || '')}${c.butDetail ? ' – ' + this.esc(c.butDetail) : ''} · ${c.type === 'complet' ? 'Jeûne complet' : 'Jeûne partiel'}</div>
         <div style="font-size:13px;color:var(--muted)">📅 ${this.fmtD(c.debut)}${c.fin ? ' → ' + this.fmtD(c.fin) : ''}</div>
         <div style="font-size:13px;margin-top:4px">${s.n} participant(s) · <b>${this.fmtN(s.r)}</b> / ${this.fmtN(s.i)} jours (${s.pc} %)</div>${s.i ? this.bar(s.pc, 'var(--primary)') : ''}
-        <div class="btn-row" style="margin-top:8px"><button class="btn small" onclick="App.openCampaign('${c.id}')">Ouvrir</button>${this.canPlan() ? `<button class="btn small secondary" onclick="App.openFastForm('${c.id}')">✏️</button><button class="btn small danger" onclick="App.deleteFast('${c.id}')">🗑️</button>` : ''}</div></div>`;
+        <div class="btn-row" style="margin-top:8px"><button class="btn small" onclick="App.openCampaign('${c.id}')">Ouvrir</button>${this.isNational() ? `<button class="btn small secondary" onclick="App.openFastForm('${c.id}')">✏️</button><button class="btn small danger" onclick="App.deleteFast('${c.id}')">🗑️</button>` : ''}</div></div>`;
     }).join('');
     document.getElementById('main').innerHTML = `
-      ${this.canPlan() ? '<div class="btn-row"><button class="btn" onclick="App.openFastForm()">+ Campagne de jeûne</button></div>' : ''}
+      ${this.isNational() ? '<div class="btn-row"><button class="btn" onclick="App.openFastForm()">+ Campagne de jeûne</button></div>' : ''}
       ${cards || '<div class="empty"><div class="icon">🔥</div><div class="msg">Aucune campagne de jeûne</div></div>'}`;
   },
   async renderCampaign(id) {
@@ -2840,7 +2887,7 @@ const App = {
     const g = k => document.getElementById(k).value;
     if (!g('fpEv') && !g('fpNom').trim()) return this.toast('Choisissez un évangéliste ou saisissez un nom');
     const old = App._editFP ? await dbGet('fastpart', App._editFP) : null;
-    await dbPut('fastpart', { ...(old || {}), id: old ? old.id : uid(), campId:App._campId, evId:g('fpEv'), nom:g('fpEv') ? '' : g('fpNom').trim(), type:g('fpType'), intention:parseInt(g('fpInt'), 10) || 0, realise:parseInt(g('fpReal'), 10) || 0 });
+    await dbPut('fastpart', { ...(old || {}), id: old ? old.id : uid(), campId:App._campId, evId:g('fpEv'), zoneId:this.forceZone(((await dbGet('evangelists', g('fpEv') || '_')) || {}).zoneId || ''), nom:g('fpEv') ? '' : g('fpNom').trim(), type:g('fpType'), intention:parseInt(g('fpInt'), 10) || 0, realise:parseInt(g('fpReal'), 10) || 0 });
     App._editFP = null; this.closeModal(); this.toast('Enregistré'); this.renderFasting();
   },
   async deleteFastPart(id) {
@@ -2853,8 +2900,90 @@ const App = {
     const [evs, parts, c] = await Promise.all([dbAll('evangelists'), dbAll('fastpart'), dbGet('fasts', App._campId)]);
     const have = new Set(parts.filter(x => x.campId === App._campId).map(x => x.evId));
     let k = 0;
-    for (const e of evs) { if (have.has(e.id)) continue; await dbPut('fastpart', { id:uid(), campId:App._campId, evId:e.id, nom:'', type:c.type || 'partiel', intention:n, realise:0 }); k++; }
+    for (const e of evs) { if (have.has(e.id)) continue; await dbPut('fastpart', { id:uid(), campId:App._campId, evId:e.id, zoneId:e.zoneId || '', nom:'', type:c.type || 'partiel', intention:n, realise:0 }); k++; }
     this.toast(k + ' évangéliste(s) ajouté(s)'); this.renderFasting();
+  },
+
+
+  /* ============ ZONES D'ABIDJAN, FICHE ÉVANGÉLISTE ============ */
+  ZONES_ABJ: ["Abatta-Akouedo", "Abobo", "Adjamé-ATT", "Anyama", "Bingerville", "Bonoumin-Attoban", "Cocody-Plateau", "Jules Verne-Cité SIR", "Koumassi", "Marcory-Treich.", "Mpouto", "Palmeraie-Faya", "Port-Bouët", "Riviera 2-Anono-Selmer", "Rosiers", "Yopougon", "Attiékoi"],
+  async seedZones(force) {
+    if (!currentUser || currentUser.role !== 'central') return 0;
+    if (!force && localStorage.getItem('deme_zones_seeded')) return 0;
+    const have = await dbAll('zones');
+    if (have.length && !force) { localStorage.setItem('deme_zones_seeded', '1'); return 0; }
+    let n = 0;
+    for (const nom of this.ZONES_ABJ) {
+      const id = 'z-' + nom.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (await dbGet('zones', id)) continue;
+      await dbPut('zones', { id, nom, date:new Date().toISOString() }); n++;
+    }
+    localStorage.setItem('deme_zones_seeded', '1');
+    return n;
+  },
+  async loadAbidjanZones() {
+    const n = await this.seedZones(true);
+    this.toast(n + ' zone(s) ajoutée(s)'); this.nav('structure');
+  },
+  async migrateScope() {
+    if (!currentUser || currentUser.role !== 'central' || localStorage.getItem('deme_mig_scope')) return;
+    const [subs, sects, houses] = await Promise.all([dbAll('subcenters'), dbAll('sectors'), dbAll('houses')]);
+    for (const s of sects) { if (s.zoneId) continue; const b = subs.find(x => x.id === s.subId); if (b && b.zoneId) { s.zoneId = b.zoneId; await dbPut('sectors', s); } }
+    const sects2 = await dbAll('sectors');
+    for (const x of houses) { if (x.zoneId) continue; const c = sects2.find(y => y.id === x.sectId); if (c && c.zoneId) { x.zoneId = c.zoneId; await dbPut('houses', x); } }
+    localStorage.setItem('deme_mig_scope', '1');
+  },
+  evCascade(from) {
+    const L = App._evL || { subs:[], sects:[], houses:[] };
+    const v = id => (document.getElementById(id) || {}).value || '';
+    const fill = (id, arr) => { const el = document.getElementById(id); if (el) el.innerHTML = '<option value="">—</option>' + arr.map(x => `<option value="${x.id}">${this.esc(x.nom)}</option>`).join(''); };
+    const z = v('evZone');
+    const subsZ = L.subs.filter(x => !z || x.zoneId === z);
+    if (from === 'zone') fill('evSub', subsZ);
+    const s = v('evSub');
+    if (from === 'zone' || from === 'sub') fill('evSect', L.sects.filter(x => s ? x.subId === s : subsZ.some(b => b.id === x.subId)));
+    const t = v('evSect');
+    const sectsOk = L.sects.filter(x => s ? x.subId === s : subsZ.some(b => b.id === x.subId));
+    fill('evHouse', L.houses.filter(x => t ? x.sectId === t : sectsOk.some(c => c.id === x.sectId)));
+  },
+  async fillSoulEv() {
+    const el = document.getElementById('sEv'); if (!el) return;
+    const evs = await dbAll('evangelists');
+    el.innerHTML = '<option value="">—</option>' + evs.map(e => `<option value="${e.id}">${this.esc((e.nom + ' ' + (e.prenom || '')).trim())}</option>`).join('');
+    if (currentUser.role === 'evangeliste') {
+      const me = evs.find(e => e.login && e.login.toLowerCase() === currentUser.name.toLowerCase());
+      if (me) el.value = me.id;
+    }
+  },
+  async openEvFiche(id) {
+    const [e, souls, acts, plans, zones, subs, sects, houses] = await Promise.all([dbGet('evangelists', id), dbAll('souls'), dbAll('activities'), dbAll('plans'), dbAll('zones'), dbAll('subcenters'), dbAll('sectors'), dbAll('houses')]);
+    if (!e) return;
+    const year = String(new Date().getFullYear());
+    const mine = souls.filter(s => s.evangelisteId === id), my = acts.filter(a => a.evId === id);
+    const sum = (t, yr) => my.filter(a => a.type === t && (!yr || (a.date || '').startsWith(year))).reduce((s, a) => s + (+a.qty || 0), 0);
+    const amesTot = sum('ame') + mine.length;
+    const amesYr = sum('ame', 1) + mine.filter(s => (s.conduiteDate || '').startsWith(year)).length;
+    const bapt = sum('bapteme') + mine.filter(s => s.parcours && s.parcours.bapteme).length;
+    const sorties = plans.filter(p => p.evId === id && p.statut === 'realisee' && p.type !== 'formation').length + my.filter(a => !a.planId && ['traites', 'ame', 'caravane'].indexOf(a.type) >= 0).length;
+    const obj = e.objectifAnnuel || 50, retenu = amesYr >= obj, pc = this.pct(amesYr, obj);
+    const nm = (arr, k) => (arr.find(x => x.id === k) || {}).nom;
+    const aff = [nm(zones, e.zoneId), nm(subs, e.subId), nm(sects, e.sectId), nm(houses, e.houseId)].filter(Boolean).join(' › ') || '—';
+    const FS = { en_cours:'En cours', terminee:'Terminée' };
+    const row = (l, val) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">${l}</span><b style="text-align:right">${val}</b></div>`;
+    this.openModal('Fiche : ' + (e.nom + ' ' + (e.prenom || '')).trim(), `
+      <div style="text-align:center;margin-bottom:8px"><span style="display:inline-block;padding:4px 12px;border-radius:12px;color:#fff;background:${retenu ? '#2e8b57' : '#e8a020'};font-size:13px">${retenu ? '✅ Retenu(e) : objectif annuel atteint' : 'Objectif annuel en cours'}</span></div>
+      <div style="font-size:13px">Âmes gagnées en ${year} : <b>${this.fmtN(amesYr)}</b> / ${this.fmtN(obj)} (${pc} %)</div>${this.bar(pc, retenu ? '#2e8b57' : 'var(--accent)')}
+      ${row('Affectation', this.esc(aff))}
+      ${row('Entrée au département', this.fmtD(e.entree))}
+      ${row('Promotion', this.esc(e.promotion || '—'))}
+      ${row('Formation', (FS[e.formStatut] || 'Non renseignée') + (e.formFin ? ' (' + this.fmtD(e.formFin) + ')' : ''))}
+      ${row('Sorties d’évangélisation', this.fmtN(sorties))}
+      ${row('Traités distribués', this.fmtN(sum('traites')))}
+      ${row('Âmes gagnées (total)', this.fmtN(amesTot))}
+      ${row('Personnes accompagnées (enregistrées)', this.fmtN(mine.length))}
+      ${row('Personnes baptisées', this.fmtN(bapt))}
+      ${row('Compte de connexion', this.esc(e.login || '—'))}
+      <button class="btn full" style="margin-top:10px" onclick="App.openEvangelistForm('${id}')">✏️ Modifier la fiche</button>`);
   },
 
   /* ============ PARAMÈTRES ============ */
@@ -2936,7 +3065,7 @@ const App = {
       <div class="card">
         <h3>ℹ️ À propos</h3>
         <p style="font-size:13px;color:var(--muted);line-height:1.7">
-          <b>DEME — Suivi des Âmes v3.2</b><br>
+          <b>DEME — Suivi des Âmes v3.3</b><br>
           Département de l'École et du Ministère des Évangélistes<br>
           Communauté Missionnaire Internationale Côte d'Ivoire<br><br>
           Application 100% hors-ligne (IndexedDB)<br>
