@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DEME">
-<title>DEME – Suivi des Âmes v3.1</title>
+<title>DEME – Suivi des Âmes v3.2</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -679,6 +679,8 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <li data-page="structure" onclick="App.nav('structure')">🏛️ Structure</li>
       <li data-page="evangelists" onclick="App.nav('evangelists')">👤 Évangélistes</li>
       <li data-page="plans" onclick="App.nav('plans')">📅 Planification</li>
+      <li data-page="prayer" onclick="App.nav('prayer')">🙏 Prière</li>
+      <li data-page="fasting" onclick="App.nav('fasting')">🔥 Jeûne</li>
       <li data-page="activities" onclick="App.nav('activities')">🎯 Activités</li>
       <li data-page="souls" onclick="App.nav('souls')">🕊️ Âmes</li>
       <li data-page="stats" onclick="App.nav('stats')">📈 Statistiques</li>
@@ -696,7 +698,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
   <main id="main" class="main"></main>
 
   <footer class="app-footer">
-    <b>DEME · Suivi des Âmes v3.1</b>
+    <b>DEME · Suivi des Âmes v3.2</b>
     Conçu par Jean Marc Olivier KOFFI<br>
     Disciple d'Ettien Antoine EDJA
     <span class="tel">📞 07 47 28 46 94</span>
@@ -727,10 +729,10 @@ input,select,textarea{font-family:inherit;font-size:15px}
    ================================================================ */
 
 const DB_NAME = 'deme_db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const DEFAULT_PASSWORD = 'deme2026';
 const API_URL = localStorage.getItem('deme_api') || 'https://script.google.com/macros/s/AKfycbw9CILCyTzFzk23HgNOC17MVXiXtMjOr8uoAnYF7jRQwTunM78aX6RayV0lWAgzjyhz/exec';
-const SYNC_STORES = ['zones','subcenters','sectors','houses','evangelists','souls','activities','plans'];
+const SYNC_STORES = ['zones','subcenters','sectors','houses','evangelists','souls','activities','plans','prayers','fasts','fastpart'];
 
 let db = null;
 let currentUser = null;
@@ -747,11 +749,11 @@ const ROLES = {
 };
 
 const PERMISSIONS = {
-  central:     ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer','settings'],
-  zone:        ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer'],
-  sous:        ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer'],
-  secteur:     ['dashboard','activities','plans','structure','evangelists','souls','stats','transfer'],
-  evangeliste: ['dashboard','activities','plans','souls','stats'],
+  central:     ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer','settings'],
+  zone:        ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
+  sous:        ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
+  secteur:     ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
+  evangeliste: ['dashboard','activities','plans','prayer','fasting','souls','stats'],
   pasteur:     ['dashboard','souls']
 };
 
@@ -772,6 +774,7 @@ function openDB() {
       if (!d.objectStoreNames.contains('users'))      d.createObjectStore('users', { keyPath:'id' });
       if (!d.objectStoreNames.contains('activities')) d.createObjectStore('activities', { keyPath:'id' });
       if (!d.objectStoreNames.contains('plans')) d.createObjectStore('plans', { keyPath:'id' });
+      ['prayers','fasts','fastpart'].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath:'id' }); });
     };
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e.target.error);
@@ -1056,7 +1059,7 @@ const App = {
     });
     const titles = {
       dashboard:'Tableau de bord', structure:'Structure DEME',
-      evangelists:'Évangélistes', plans:'Planification', activities:'Activités des évangélistes', souls:'Âmes', stats:'Statistiques',
+      evangelists:'Évangélistes', plans:'Planification', prayer:'Prière', fasting:'Jeûne', activities:'Activités des évangélistes', souls:'Âmes', stats:'Statistiques',
       transfer:'Import / Export', settings:'Paramètres'
     };
     document.getElementById('pageTitle').textContent = titles[page] || page;
@@ -1068,6 +1071,8 @@ const App = {
         structure: () => this.renderStructure(),
         evangelists: () => this.renderEvangelists(),
         plans: () => this.renderPlans(),
+        prayer: () => this.renderPrayer(),
+        fasting: () => this.renderFasting(),
         activities: () => this.renderActivities(),
         souls: () => this.renderSouls(),
         stats: () => this.renderStats(),
@@ -2145,6 +2150,9 @@ const App = {
       souls: await dbAll('souls'),
       activities: await dbAll('activities'),
       plans: await dbAll('plans'),
+      prayers: await dbAll('prayers'),
+      fasts: await dbAll('fasts'),
+      fastpart: await dbAll('fastpart'),
       users: await dbAll('users')
     };
     const filename = `deme-export-${todayISO()}.json`;
@@ -2220,7 +2228,7 @@ const App = {
       const existingSouls = await dbAll('souls');
       const keys = new Set(existingSouls.map(s => (s.nom+'|'+(s.tel||'')).toLowerCase()));
 
-      for (const store of ['zones','subcenters','sectors','houses','evangelists','activities','plans','users']) {
+      for (const store of ['zones','subcenters','sectors','houses','evangelists','activities','plans','prayers','fasts','fastpart','users']) {
         for (const item of (data[store]||[])) {
           const ex = await dbGet(store, item.id);
           if (!ex) { await dbPut(store, item); imp++; } else skip++;
@@ -2243,7 +2251,7 @@ const App = {
   async resetAll() {
     if (!confirm('Effacer TOUTES les données ?')) return;
     if (!confirm('Confirmation finale ?')) return;
-    for (const st of ['zones','subcenters','sectors','houses','evangelists','activities','plans','souls','audit','users']) {
+    for (const st of ['zones','subcenters','sectors','houses','evangelists','activities','plans','prayers','fasts','fastpart','souls','audit','users']) {
       await dbClear(st);
     }
     this.toast('Données effacées');
@@ -2348,7 +2356,7 @@ const App = {
   },
 
   async renderActivities() {
-    const [{ acts, items }, zones, evs, obj] = await Promise.all([this.activityItems(), dbAll('zones'), dbAll('evangelists'), this.getObjectives()]);
+    const [{ acts, items }, zones, evs, obj, prayers, fparts] = await Promise.all([this.activityItems(), dbAll('zones'), dbAll('evangelists'), this.getObjectives(), dbAll('prayers'), dbAll('fastpart')]);
     const year = String(new Date().getFullYear());
     const types = Object.keys(this.ACT_TYPES);
     const bar = (p, c) => `<div style="height:8px;background:var(--border);border-radius:6px;overflow:hidden;margin:4px 0"><div style="height:100%;width:${Math.min(100, p)}%;background:${c}"></div></div>`;
@@ -2375,6 +2383,9 @@ const App = {
         <span style="float:right;white-space:nowrap"><button class="btn small secondary" style="padding:2px 8px" onclick="App.openActForm('${a.id}')">✏️</button> <button class="btn small danger" style="padding:2px 8px" onclick="App.deleteAct('${a.id}')">🗑️</button></span>
         ${T.icon} <b>${this.fmtN(+a.qty)}</b> ${T.short} · ${this.fmtD(a.date)}<br><span style="color:var(--muted)">${this.esc(zn(a.zoneId))} · ${this.esc(en(a.evId))}${a.note ? ' · ' + this.esc(a.note) : ''}</span></div>`;
     }).join('');
+    const pTot = prayers.reduce((s, x) => s + this.prayVol(x), 0);
+    const fI = fparts.reduce((s, x) => s + (+x.intention || 0), 0), fR = fparts.reduce((s, x) => s + (+x.realise || 0), 0);
+    const prayCard = `<div class="card"><div style="font-weight:700">🙏 Prière et jeûne</div><div style="font-size:13px;color:var(--muted)">Prière : <b>${this.fmtH(pTot)}</b> cumulées · ${prayers.length} séance(s)</div><div style="font-size:13px;color:var(--muted)">Jeûne : <b>${this.fmtN(fR)}</b> jours réalisés / ${this.fmtN(fI)} prévus</div></div>`;
     document.getElementById('main').innerHTML = `
       <div class="btn-row">
         <button class="btn" onclick="App.openActForm()">+ Activité</button>
@@ -2383,6 +2394,7 @@ const App = {
         <button class="btn secondary" onclick="App.openObjectives()">🎯 Objectifs</button>
       </div>
       ${axes}
+      ${prayCard}
       ${tbl('Par zone', zRows)}
       ${tbl('Par évangéliste', eRows)}
       <div class="card"><h3>Dernières activités saisies</h3>${recent || '<div class="empty"><div class="msg">Aucune activité saisie</div></div>'}</div>`;
@@ -2444,7 +2456,7 @@ const App = {
   },
 
   async openWeekly(start) {
-    const [{ items }, zones, obj, plans] = await Promise.all([this.activityItems(), dbAll('zones'), this.getObjectives(), dbAll('plans')]);
+    const [{ items }, zones, obj, plans, prayers, fasts] = await Promise.all([this.activityItems(), dbAll('zones'), this.getObjectives(), dbAll('plans'), dbAll('prayers'), dbAll('fasts')]);
     const d = start ? new Date(start + 'T00:00:00') : new Date();
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     const e = new Date(d); e.setDate(e.getDate() + 6);
@@ -2460,6 +2472,10 @@ const App = {
       return parts.length ? '• ' + z.nom + ' : ' + parts.join(', ') : null;
     }).filter(Boolean);
     if (zl.length) t += '\n*Par zone*\n' + zl.join('\n') + '\n';
+    const pw = prayers.filter(x => x.date >= from && x.date <= to);
+    if (pw.length) t += '\n🙏 *Prière* : ' + pw.length + ' séance(s), ' + this.fmtH(pw.reduce((s, x) => s + this.prayVol(x), 0)) + ' cumulées\n';
+    const fc = fasts.filter(x => x.debut <= to && (x.fin || x.debut) >= from);
+    if (fc.length) t += '🔥 *Jeûne en cours* : ' + fc.map(x => x.nom).join(', ') + '\n';
     const nF = this.isoD(new Date(e.getTime() + 864e5)), nT = this.isoD(new Date(e.getTime() + 7 * 864e5));
     const nx = plans.filter(p => (p.statut === 'programmee' || p.statut === 'reportee') && p.date >= nF && p.date <= nT).sort((a, b) => a.date.localeCompare(b.date));
     if (nx.length) t += '\n*Programmé la semaine prochaine*\n' + nx.map(p => { const T = this.PLAN_TYPES[p.type] || { icon:'•', label:p.type }; const z = (zones.find(x => x.id === p.zoneId) || {}).nom; return '• ' + this.fmtD(p.date).slice(0, 5) + ' – ' + (p.titre || T.label) + (z ? ' (' + z + ')' : '') + (p.objectif ? ' – objectif ' + this.fmtN(p.objectif) : ''); }).join('\n') + '\n';
@@ -2654,6 +2670,193 @@ const App = {
     this.toast('Supprimé'); this.nav('plans');
   },
 
+
+  /* ============ PRIÈRE ============ */
+  PRAY_SUBJ: { traites:'Traités', caravanes:'Caravanes', jericho:'Opération Jéricho', ames:'Âmes et baptêmes', ecole:'École des évangélistes', autre:'Autre' },
+  prayVol(x) { return (x.minutes || 0) * (x.participants || 0) / 60; },
+  fmtH(v) { return this.fmtN(Math.round(v * 10) / 10) + ' h'; },
+  minutesBetween(a, b) {
+    if (!a || !b) return 0;
+    const p = a.split(':').map(Number), q = b.split(':').map(Number);
+    let d = (q[0] * 60 + q[1]) - (p[0] * 60 + p[1]); if (d < 0) d += 1440; return d;
+  },
+  async renderPrayer() {
+    const [list, zones, evs] = await Promise.all([dbAll('prayers'), dbAll('zones'), dbAll('evangelists')]);
+    const year = String(new Date().getFullYear());
+    const tot = list.reduce((s, x) => s + this.prayVol(x), 0);
+    const yr = list.filter(x => (x.date || '').startsWith(year)).reduce((s, x) => s + this.prayVol(x), 0);
+    const avgP = list.length ? Math.round(list.reduce((s, x) => s + (x.participants || 0), 0) / list.length) : 0;
+    const avgM = list.length ? Math.round(list.reduce((s, x) => s + (x.minutes || 0), 0) / list.length) : 0;
+    const stat = (v, l) => `<div class="card" style="flex:1;min-width:130px;text-align:center"><div style="font-size:20px;font-weight:700">${v}</div><div style="font-size:12px;color:var(--muted)">${l}</div></div>`;
+    const grp = (test, label, keys) => keys.map(k => { const g = list.filter(x => test(x, k)); return { name:label(k), n:g.length, v:g.reduce((s, x) => s + this.prayVol(x), 0) }; }).filter(r => r.n);
+    const zn = id => (zones.find(z => z.id === id) || {}).nom;
+    const byZone = grp((x, k) => (x.zoneId || '') === k, k => zn(k) || 'Non précisée', Array.from(new Set(list.map(x => x.zoneId || ''))));
+    const bySubj = grp((x, k) => (x.sujets || []).includes(k), k => this.PRAY_SUBJ[k], Object.keys(this.PRAY_SUBJ));
+    const tbl = (title, rows) => rows.length ? `<div class="card"><h3>${title}</h3><table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="color:var(--muted)"><th style="text-align:left;padding:4px">&nbsp;</th><th style="text-align:right">Séances</th><th style="text-align:right">Volume</th></tr>${rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:5px 4px">${this.esc(r.name)}</td><td style="text-align:right">${r.n}</td><td style="text-align:right">${this.fmtH(r.v)}</td></tr>`).join('')}</table></div>` : '';
+    const en = id => { const e = evs.find(x => x.id === id); return e ? (e.nom + ' ' + (e.prenom || '')).trim() : ''; };
+    const rows = list.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.debut || '').localeCompare(a.debut || '')).slice(0, 30).map(x => `
+      <div style="padding:8px 0;border-top:1px solid var(--border);font-size:13px">
+        ${this.canPlan() ? `<span style="float:right;white-space:nowrap"><button class="btn small secondary" style="padding:2px 8px" onclick="App.openPrayerForm('${x.id}')">✏️</button> <button class="btn small danger" style="padding:2px 8px" onclick="App.deletePrayer('${x.id}')">🗑️</button></span>` : ''}
+        🙏 <b>${this.fmtD(x.date)}</b> · ${x.debut && x.fin ? x.debut + '–' + x.fin : (x.minutes || 0) + ' min'} · ${x.participants || 0} pers. · <b>${this.fmtH(this.prayVol(x))}</b><br>
+        <span style="color:var(--muted)">${[zn(x.zoneId), en(x.evId), (x.sujets || []).map(k => this.PRAY_SUBJ[k]).join(', '), x.note].filter(Boolean).map(s => this.esc(s)).join(' · ')}</span></div>`).join('');
+    document.getElementById('main').innerHTML = `
+      ${this.canPlan() ? '<div class="btn-row"><button class="btn" onclick="App.openPrayerForm()">+ Séance de prière</button></div>' : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${stat(this.fmtH(tot), 'Volume cumulé (heures × personnes)')}${stat(this.fmtH(yr), 'Cette année')}${stat(list.length, 'Séances')}${stat(avgP + ' pers. · ' + avgM + ' min', 'Moyenne par séance')}</div>
+      ${tbl('Par zone', byZone)}${tbl('Par sujet', bySubj)}
+      <div class="card"><h3>Dernières séances</h3>${rows || '<div class="empty"><div class="msg">Aucune séance enregistrée</div></div>'}</div>`;
+  },
+  async openPrayerForm(id) {
+    const [zones, evs, plans] = await Promise.all([dbAll('zones'), dbAll('evangelists'), dbAll('plans')]);
+    const x = id ? await dbGet('prayers', id) : {};
+    App._editPray = id || null;
+    const opt = (arr, sel, f) => arr.map(o => `<option value="${o.id}" ${o.id === sel ? 'selected' : ''}>${this.esc(f(o))}</option>`).join('');
+    const pend = plans.filter(p => this.planPending(p) || p.id === x.planId).sort((a, b) => a.date.localeCompare(b.date));
+    this.openModal(id ? 'Modifier la séance' : 'Séance de prière', `
+      <div class="form-group"><label class="form-required">Date</label><input type="date" id="pyDate" value="${x.date || this.isoD(new Date())}"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Début</label><input type="time" id="pyDebut" value="${x.debut || ''}"></div>
+        <div class="form-group"><label>Fin</label><input type="time" id="pyFin" value="${x.fin || ''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>ou durée (minutes)</label><input type="number" min="1" id="pyMin" value="${x.debut && x.fin ? '' : (x.minutes || '')}"></div>
+        <div class="form-group"><label class="form-required">Participants</label><input type="number" min="1" id="pyPart" value="${x.participants || ''}"></div>
+      </div>
+      <div class="form-group"><label>Sujets de prière</label><div style="display:flex;flex-wrap:wrap;gap:10px;font-size:13px">${Object.entries(this.PRAY_SUBJ).map(([k, l]) => `<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" class="pySubj" value="${k}" ${(x.sujets || []).includes(k) ? 'checked' : ''} style="width:auto"> ${l}</label>`).join('')}</div></div>
+      <div class="form-group"><label>Zone</label><select id="pyZone"><option value="">—</option>${opt(zones, x.zoneId, z => z.nom)}</select></div>
+      <div class="form-group"><label>Responsable</label><select id="pyEv"><option value="">—</option>${opt(evs, x.evId, e => (e.nom + ' ' + (e.prenom || '')).trim())}</select></div>
+      <div class="form-group"><label>Liée à une activité programmée</label><select id="pyPlan"><option value="">—</option>${pend.map(p => `<option value="${p.id}" ${p.id === x.planId ? 'selected' : ''}>${this.fmtD(p.date)} – ${this.esc(p.titre || (this.PLAN_TYPES[p.type] || {}).label || p.type)}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Note</label><input id="pyNote" value="${this.esc(x.note || '')}"></div>
+      <button class="btn full" onclick="App.savePrayer()">Enregistrer</button>`);
+  },
+  async savePrayer() {
+    const g = k => document.getElementById(k).value;
+    const debut = g('pyDebut'), fin = g('pyFin');
+    const minutes = (debut && fin) ? this.minutesBetween(debut, fin) : (parseInt(g('pyMin'), 10) || 0);
+    const part = parseInt(g('pyPart'), 10) || 0;
+    if (!g('pyDate')) return this.toast('Date requise');
+    if (minutes < 1) return this.toast('Indiquez les heures ou la durée');
+    if (part < 1) return this.toast('Nombre de participants requis');
+    const old = App._editPray ? await dbGet('prayers', App._editPray) : null;
+    await dbPut('prayers', { ...(old || {}), id: old ? old.id : uid(), date:g('pyDate'), debut, fin, minutes, participants:part,
+      sujets:Array.from(document.querySelectorAll('.pySubj:checked')).map(c => c.value), zoneId:g('pyZone'), evId:g('pyEv'), planId:g('pyPlan'), note:g('pyNote').trim(),
+      by: currentUser ? currentUser.name : '', createdAt: old ? old.createdAt : new Date().toISOString() });
+    await this.log(old ? 'update' : 'create', 'Séance de prière');
+    App._editPray = null; this.closeModal(); this.toast('Enregistré'); this.nav('prayer');
+  },
+  async deletePrayer(id) {
+    if (!confirm('Supprimer cette séance de prière ?')) return;
+    await dbDel('prayers', id); this.toast('Supprimé'); this.nav('prayer');
+  },
+
+  /* ============ JEÛNE ============ */
+  FAST_BUTS: ["Évangélisation et moisson d'âmes", "Caravanes et baptêmes", "Opération Jéricho (églises de maison)", "Nation", "Dirigeants", "Ministère", "Autre"],
+  fastState(c) { const t = this.isoD(new Date()); return t < c.debut ? 'À venir' : (c.fin && t > c.fin ? 'Terminée' : 'En cours'); },
+  fastSum(parts) {
+    const i = parts.reduce((s, x) => s + (+x.intention || 0), 0), r = parts.reduce((s, x) => s + (+x.realise || 0), 0);
+    return { n:parts.length, i, r, pc:this.pct(r, i) };
+  },
+  bar(p, c) { return `<div style="height:8px;background:var(--border);border-radius:6px;overflow:hidden;margin:4px 0"><div style="height:100%;width:${Math.min(100, p)}%;background:${c}"></div></div>`; },
+  openCampaign(id) { App._campId = id; this.renderFasting(); },
+  closeCampaign() { App._campId = null; this.renderFasting(); },
+  async renderFasting() {
+    if (App._campId) return this.renderCampaign(App._campId);
+    const [camps, parts] = await Promise.all([dbAll('fasts'), dbAll('fastpart')]);
+    const cards = camps.slice().sort((a, b) => (b.debut || '').localeCompare(a.debut || '')).map(c => {
+      const s = this.fastSum(parts.filter(x => x.campId === c.id)), st = this.fastState(c);
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;gap:8px"><div style="font-weight:700">🔥 ${this.esc(c.nom)}</div><span style="font-size:11px;background:${st === 'En cours' ? '#2e8b57' : st === 'À venir' ? '#1a5490' : '#888'};color:#fff;border-radius:10px;padding:2px 8px;height:fit-content">${st}</span></div>
+        <div style="font-size:13px;color:var(--muted)">${this.esc(c.but || '')}${c.butDetail ? ' – ' + this.esc(c.butDetail) : ''} · ${c.type === 'complet' ? 'Jeûne complet' : 'Jeûne partiel'}</div>
+        <div style="font-size:13px;color:var(--muted)">📅 ${this.fmtD(c.debut)}${c.fin ? ' → ' + this.fmtD(c.fin) : ''}</div>
+        <div style="font-size:13px;margin-top:4px">${s.n} participant(s) · <b>${this.fmtN(s.r)}</b> / ${this.fmtN(s.i)} jours (${s.pc} %)</div>${s.i ? this.bar(s.pc, 'var(--primary)') : ''}
+        <div class="btn-row" style="margin-top:8px"><button class="btn small" onclick="App.openCampaign('${c.id}')">Ouvrir</button>${this.canPlan() ? `<button class="btn small secondary" onclick="App.openFastForm('${c.id}')">✏️</button><button class="btn small danger" onclick="App.deleteFast('${c.id}')">🗑️</button>` : ''}</div></div>`;
+    }).join('');
+    document.getElementById('main').innerHTML = `
+      ${this.canPlan() ? '<div class="btn-row"><button class="btn" onclick="App.openFastForm()">+ Campagne de jeûne</button></div>' : ''}
+      ${cards || '<div class="empty"><div class="icon">🔥</div><div class="msg">Aucune campagne de jeûne</div></div>'}`;
+  },
+  async renderCampaign(id) {
+    const [c, allParts, evs] = await Promise.all([dbGet('fasts', id), dbAll('fastpart'), dbAll('evangelists')]);
+    if (!c) { App._campId = null; return this.renderFasting(); }
+    const parts = allParts.filter(x => x.campId === id);
+    const s = this.fastSum(parts);
+    const nm = x => { const e = evs.find(v => v.id === x.evId); return e ? (e.nom + ' ' + (e.prenom || '')).trim() : (x.nom || '—'); };
+    const rows = parts.slice().sort((a, b) => nm(a).localeCompare(nm(b))).map(x => {
+      const pc = this.pct(+x.realise || 0, +x.intention || 0);
+      return `<div style="padding:8px 0;border-top:1px solid var(--border);font-size:13px">
+        ${this.canPlan() ? `<span style="float:right;white-space:nowrap"><button class="btn small secondary" style="padding:2px 8px" onclick="App.openFastPartForm('${x.id}')">✏️</button> <button class="btn small danger" style="padding:2px 8px" onclick="App.deleteFastPart('${x.id}')">🗑️</button></span>` : ''}
+        <b>${this.esc(nm(x))}</b> · ${x.type === 'complet' ? 'complet' : 'partiel'}<br>
+        <span style="color:var(--muted)">Prévu ${this.fmtN(+x.intention || 0)} j · Réalisé ${this.fmtN(+x.realise || 0)} j (${pc} %)</span>${x.intention ? this.bar(pc, pc >= 100 ? '#2e8b57' : 'var(--accent)') : ''}</div>`;
+    }).join('');
+    const done = parts.filter(x => (+x.intention || 0) > 0 && (+x.realise || 0) >= (+x.intention || 0)).length;
+    document.getElementById('main').innerHTML = `
+      <div class="btn-row"><button class="btn secondary" onclick="App.closeCampaign()">← Retour</button>${this.canPlan() ? '<button class="btn" onclick="App.openFastPartForm()">+ Participant</button><button class="btn secondary" onclick="App.addAllEvangelists()">+ Tous les évangélistes</button>' : ''}</div>
+      <div class="card"><div style="font-weight:700">🔥 ${this.esc(c.nom)}</div>
+        <div style="font-size:13px;color:var(--muted)">${this.esc(c.but || '')}${c.butDetail ? ' – ' + this.esc(c.butDetail) : ''} · ${this.fastState(c)}</div>
+        <div style="font-size:13px;margin-top:6px">${s.n} participant(s) · ${done} ont atteint leur intention</div>
+        <div style="font-size:13px">Jours : <b>${this.fmtN(s.r)}</b> réalisés / ${this.fmtN(s.i)} prévus (${s.pc} %)</div>${s.i ? this.bar(s.pc, 'var(--primary)') : ''}</div>
+      <div class="card"><h3>Participants</h3>${rows || '<div class="empty"><div class="msg">Aucun participant</div></div>'}</div>`;
+  },
+  openFastForm(id) {
+    dbGet('fasts', id || '_').then(c => {
+      c = c || {}; App._editFast = id || null;
+      this.openModal(id ? 'Modifier la campagne' : 'Campagne de jeûne', `
+        <div class="form-group"><label class="form-required">Nom</label><input id="fcNom" value="${this.esc(c.nom || '')}"></div>
+        <div class="form-group"><label>But</label><select id="fcBut">${this.FAST_BUTS.map(b => `<option ${b === c.but ? 'selected' : ''}>${this.esc(b)}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Précision (facultatif)</label><input id="fcDetail" value="${this.esc(c.butDetail || '')}"></div>
+        <div class="form-group"><label>Type de jeûne</label><select id="fcType"><option value="partiel" ${c.type !== 'complet' ? 'selected' : ''}>Partiel</option><option value="complet" ${c.type === 'complet' ? 'selected' : ''}>Complet</option></select></div>
+        <div class="form-row"><div class="form-group"><label class="form-required">Début</label><input type="date" id="fcDebut" value="${c.debut || this.isoD(new Date())}"></div>
+        <div class="form-group"><label>Fin</label><input type="date" id="fcFin" value="${c.fin || ''}"></div></div>
+        <button class="btn full" onclick="App.saveFast()">Enregistrer</button>`);
+    });
+  },
+  async saveFast() {
+    const g = k => document.getElementById(k).value;
+    if (!g('fcNom').trim() || !g('fcDebut')) return this.toast('Nom et date de début requis');
+    if (g('fcFin') && g('fcFin') < g('fcDebut')) return this.toast('La date de fin est avant le début');
+    const old = App._editFast ? await dbGet('fasts', App._editFast) : null;
+    await dbPut('fasts', { ...(old || {}), id: old ? old.id : uid(), nom:g('fcNom').trim(), but:g('fcBut'), butDetail:g('fcDetail').trim(), type:g('fcType'), debut:g('fcDebut'), fin:g('fcFin') });
+    await this.log(old ? 'update' : 'create', 'Campagne de jeûne: ' + g('fcNom').trim());
+    App._editFast = null; this.closeModal(); this.toast('Enregistré'); this.nav('fasting');
+  },
+  async deleteFast(id) {
+    const parts = (await dbAll('fastpart')).filter(x => x.campId === id);
+    if (!confirm('Supprimer cette campagne' + (parts.length ? ' et ses ' + parts.length + ' participant(s)' : '') + ' ?')) return;
+    for (const x of parts) await dbDel('fastpart', x.id);
+    await dbDel('fasts', id); this.toast('Supprimé'); this.nav('fasting');
+  },
+  async openFastPartForm(id) {
+    const [evs, c] = await Promise.all([dbAll('evangelists'), dbGet('fasts', App._campId)]);
+    const x = id ? await dbGet('fastpart', id) : {};
+    App._editFP = id || null;
+    this.openModal(id ? 'Modifier le participant' : 'Nouveau participant', `
+      <div class="form-group"><label>Évangéliste</label><select id="fpEv"><option value="">— Autre personne —</option>${evs.map(e => `<option value="${e.id}" ${e.id === x.evId ? 'selected' : ''}>${this.esc((e.nom + ' ' + (e.prenom || '')).trim())}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Nom (si autre personne)</label><input id="fpNom" value="${this.esc(x.nom || '')}"></div>
+      <div class="form-group"><label>Type de jeûne</label><select id="fpType"><option value="partiel" ${(x.type || c.type) !== 'complet' ? 'selected' : ''}>Partiel</option><option value="complet" ${(x.type || c.type) === 'complet' ? 'selected' : ''}>Complet</option></select></div>
+      <div class="form-row"><div class="form-group"><label>Jours prévus</label><input type="number" min="0" id="fpInt" value="${x.intention || ''}"></div>
+      <div class="form-group"><label>Jours réalisés</label><input type="number" min="0" id="fpReal" value="${x.realise || ''}"></div></div>
+      <button class="btn full" onclick="App.saveFastPart()">Enregistrer</button>`);
+  },
+  async saveFastPart() {
+    const g = k => document.getElementById(k).value;
+    if (!g('fpEv') && !g('fpNom').trim()) return this.toast('Choisissez un évangéliste ou saisissez un nom');
+    const old = App._editFP ? await dbGet('fastpart', App._editFP) : null;
+    await dbPut('fastpart', { ...(old || {}), id: old ? old.id : uid(), campId:App._campId, evId:g('fpEv'), nom:g('fpEv') ? '' : g('fpNom').trim(), type:g('fpType'), intention:parseInt(g('fpInt'), 10) || 0, realise:parseInt(g('fpReal'), 10) || 0 });
+    App._editFP = null; this.closeModal(); this.toast('Enregistré'); this.renderFasting();
+  },
+  async deleteFastPart(id) {
+    if (!confirm('Retirer ce participant ?')) return;
+    await dbDel('fastpart', id); this.toast('Retiré'); this.renderFasting();
+  },
+  async addAllEvangelists() {
+    const d = prompt('Nombre de jours de jeûne prévus pour chaque évangéliste :'); if (d === null) return;
+    const n = parseInt(d, 10); if (isNaN(n) || n < 0) return this.toast('Nombre invalide');
+    const [evs, parts, c] = await Promise.all([dbAll('evangelists'), dbAll('fastpart'), dbGet('fasts', App._campId)]);
+    const have = new Set(parts.filter(x => x.campId === App._campId).map(x => x.evId));
+    let k = 0;
+    for (const e of evs) { if (have.has(e.id)) continue; await dbPut('fastpart', { id:uid(), campId:App._campId, evId:e.id, nom:'', type:c.type || 'partiel', intention:n, realise:0 }); k++; }
+    this.toast(k + ' évangéliste(s) ajouté(s)'); this.renderFasting();
+  },
+
   /* ============ PARAMÈTRES ============ */
   async renderSettings() {
     if (currentUser.role !== 'central') {
@@ -2733,7 +2936,7 @@ const App = {
       <div class="card">
         <h3>ℹ️ À propos</h3>
         <p style="font-size:13px;color:var(--muted);line-height:1.7">
-          <b>DEME — Suivi des Âmes v3.1</b><br>
+          <b>DEME — Suivi des Âmes v3.2</b><br>
           Département de l'École et du Ministère des Évangélistes<br>
           Communauté Missionnaire Internationale Côte d'Ivoire<br><br>
           Application 100% hors-ligne (IndexedDB)<br>
