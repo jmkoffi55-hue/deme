@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a5490">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DEME">
+<title>DEME – Suivi des Âmes v3.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#1a5490;--primary-dark:#0e3a6b;--accent:#e8a020;
+  --bg:#f4f6f9;--card:#fff;--text:#1a1a1a;--muted:#6b7280;
+  --border:#e2e8f0;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+  --purple:#7c3aed;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.06);
+}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--text);font-size:15px;line-height:1.45;
+  overscroll-behavior-y:contain;
+}
+.hidden{display:none!important}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:15px}
+
+/* ============ LOGIN ============ */
+#loginScreen{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  padding:20px;
+}
+.login-box{
+  background:#fff;padding:32px 24px;border-radius:20px;
+  width:100%;max-width:420px;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  max-height:95vh;overflow-y:auto;
+}
+.login-logo{
+  width:70px;height:70px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;font-size:30px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;letter-spacing:1px;
+}
+.login-box h1{color:var(--primary);font-size:22px;margin-bottom:4px;letter-spacing:2px}
+.login-box .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+.login-box input,.login-box select,.login-box textarea{
+  width:100%;padding:13px 16px;border:2px solid var(--border);
+  border-radius:12px;font-size:15px;margin-bottom:10px;background:#f9fafb;
+}
+.login-box input:focus,.login-box select:focus,.login-box textarea:focus{
+  outline:none;border-color:var(--primary);background:#fff
+}
+.login-box button{
+  width:100%;padding:14px;background:var(--primary);color:#fff;
+  border:none;border-radius:12px;font-size:16px;font-weight:600;
+}
+.login-box button:active{background:var(--primary-dark)}
+.login-box .err{display:block;margin-top:10px;color:var(--danger);font-size:13px;min-height:18px}
+.login-box .hint{
+  display:block;margin-top:16px;color:var(--muted);font-size:11px;
+  line-height:1.6;padding:10px;background:#f9fafb;border-radius:8px;
+  border:1px dashed var(--border);
+}
+.login-box .hint b{color:var(--primary)}
+.login-tabs{display:flex;gap:6px;margin-bottom:16px;background:#f1f5f9;padding:4px;border-radius:10px}
+.login-tabs button{
+  flex:1;padding:10px;background:transparent;color:var(--muted);
+  border:none;border-radius:8px;font-size:13px;font-weight:600;margin:0;
+}
+.login-tabs button.active{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* ============ SIGNATURE AUTEUR ============ */
+.author-signature{
+  text-align:center;font-size:11px;color:var(--muted);
+  padding:14px 10px;line-height:1.7;
+  border-top:1px dashed var(--border);
+  margin-top:16px;
+}
+.author-signature b{
+  color:var(--primary);font-weight:700;
+  display:block;font-size:12px;margin-bottom:2px;
+  letter-spacing:.3px;
+}
+.author-signature .disciple{
+  display:block;color:var(--muted);font-style:italic;
+  margin:2px 0;font-size:11px;
+}
+.author-signature .tel{
+  display:inline-block;margin-top:4px;
+  background:#f1f5f9;padding:3px 10px;border-radius:12px;
+  color:var(--primary);font-weight:600;font-size:11px;
+  letter-spacing:.5px;
+}
+.sidebar-footer{
+  padding:14px 16px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--muted);line-height:1.6;
+  text-align:center;background:#fafbfc;
+}
+.sidebar-footer b{color:var(--primary);display:block;font-size:11px;margin-bottom:2px}
+.sidebar-footer .tel{
+  display:inline-block;margin-top:4px;background:#eef4fb;
+  padding:2px 8px;border-radius:10px;
+  color:var(--primary);font-weight:600;
+}
+.login-signature{
+  margin-top:18px;padding-top:14px;
+  border-top:1px dashed var(--border);
+  font-size:10px;color:var(--muted);line-height:1.6;
+}
+.login-signature b{color:var(--primary);font-size:11px;display:block;margin-bottom:2px}
+.login-signature .tel{
+  display:inline-block;margin-top:4px;background:#eef4fb;
+  padding:2px 10px;border-radius:12px;color:var(--primary);
+  font-weight:600;font-size:10px;letter-spacing:.5px;
+}
+.app-footer{
+  text-align:center;padding:16px 14px 8px;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  font-size:10px;color:var(--muted);line-height:1.6;
+}
+.app-footer b{color:var(--primary);font-size:11px;display:block;margin-bottom:2px}
+.app-footer .tel{
+  display:inline-block;margin-top:3px;background:#eef4fb;
+  padding:2px 10px;border-radius:10px;color:var(--primary);
+  font-weight:600;font-size:10px;letter-spacing:.5px;
+}
+
+/* ============ DEPLOY CODE ============ */
+.deploy-box{
+  background:linear-gradient(135deg,#f0f9ff,#e0f2fe);
+  border:2px dashed var(--primary);border-radius:12px;
+  padding:16px;margin-bottom:12px;text-align:center;
+}
+.deploy-code{
+  font-family:'Courier New',monospace;
+  font-size:14px;font-weight:700;color:var(--primary);
+  letter-spacing:2px;padding:12px;background:#fff;
+  border-radius:8px;margin:10px 0;word-break:break-all;
+  user-select:all;line-height:1.5;
+}
+.deploy-help{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* ============ EXPORT CHOICE ============ */
+.export-choice{
+  background:linear-gradient(135deg,#f0f9ff,#e0f2fe);
+  border:1.5px solid #bae6fd;border-radius:12px;
+  padding:14px;margin-bottom:12px;
+}
+.export-choice h4{
+  font-size:13px;color:var(--primary);margin-bottom:8px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+}
+.export-choice p{
+  font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;
+}
+.export-help{
+  background:#fff7ed;border-left:3px solid var(--warning);
+  padding:10px;border-radius:8px;font-size:11px;
+  color:#9a3412;line-height:1.5;margin-top:10px;
+}
+
+/* ============ APP ============ */
+#app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:var(--primary);color:#fff;
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.topbar h1{font-size:16px;font-weight:600;flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu-btn{
+  background:rgba(255,255,255,.15);border:none;color:#fff;
+  font-size:19px;padding:6px 11px;border-radius:8px;
+}
+.menu-btn:active{background:rgba(255,255,255,.3)}
+.badge{
+  background:rgba(255,255,255,.2);padding:4px 10px;border-radius:20px;
+  font-size:11px;white-space:nowrap;max-width:130px;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.role-badge{
+  background:var(--accent);color:#fff;font-size:10px;
+  padding:2px 8px;border-radius:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+
+/* ============ SIDEBAR ============ */
+.sidebar{
+  position:fixed;top:0;left:-300px;width:280px;height:100vh;height:100dvh;
+  background:#fff;z-index:100;transition:left .3s ease;
+  box-shadow:4px 0 20px rgba(0,0,0,.15);overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.sidebar.open{left:0}
+.sidebar-header{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;padding:24px 20px;
+  padding-top:calc(24px + env(safe-area-inset-top));
+  display:flex;flex-direction:column;gap:4px;
+}
+.sidebar-header strong{font-size:22px;letter-spacing:3px}
+.sidebar-header small{opacity:.9;font-size:12px}
+.sidebar-header .role-tag{
+  display:inline-block;background:var(--accent);color:#fff;
+  font-size:10px;padding:3px 10px;border-radius:10px;
+  font-weight:700;margin-top:6px;width:fit-content;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.sidebar ul{list-style:none;padding:8px 0;flex:1}
+.sidebar li{
+  padding:15px 22px;border-bottom:1px solid var(--border);
+  font-size:15px;display:flex;align-items:center;gap:10px;
+}
+.sidebar li:active{background:var(--bg)}
+.sidebar li.active{background:#eef4fb;color:var(--primary);font-weight:600;
+  border-left:4px solid var(--primary);padding-left:18px}
+.sidebar li.logout{color:var(--danger);margin-top:auto;border-top:1px solid var(--border)}
+
+.backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:99;opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.backdrop.show{opacity:1;pointer-events:auto}
+
+/* ============ MAIN ============ */
+.main{
+  flex:1;padding:14px;padding-bottom:40px;
+  max-width:1100px;width:100%;margin:0 auto;
+}
+
+/* ============ CARDS ============ */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  padding:16px;margin-bottom:12px;box-shadow:var(--shadow);
+}
+.card h3{
+  font-size:14px;margin-bottom:12px;color:var(--primary);
+  display:flex;align-items:center;gap:8px;
+  text-transform:uppercase;letter-spacing:.5px;font-weight:700;
+}
+
+/* ============ STATS ============ */
+.stat-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:10px;margin-bottom:16px;
+}
+@media(min-width:600px){.stat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.stat-grid{grid-template-columns:repeat(6,1fr)}}
+.stat-box{
+  background:#fff;border-radius:var(--radius);padding:14px;
+  box-shadow:var(--shadow);border-left:4px solid var(--primary);
+}
+.stat-box .num{font-size:24px;font-weight:700;color:var(--primary);line-height:1.1}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:4px;
+  text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.stat-box.success{border-color:var(--success)}
+.stat-box.success .num{color:var(--success)}
+.stat-box.warning{border-color:var(--warning)}
+.stat-box.warning .num{color:var(--warning)}
+.stat-box.danger{border-color:var(--danger)}
+.stat-box.danger .num{color:var(--danger)}
+.stat-box.accent{border-color:var(--accent)}
+.stat-box.accent .num{color:var(--accent)}
+
+/* ============ BUTTONS ============ */
+.btn{
+  padding:11px 18px;border:none;border-radius:10px;
+  font-size:14px;font-weight:600;background:var(--primary);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  transition:opacity .15s,transform .1s;
+}
+.btn:active{opacity:.85;transform:scale(.97)}
+.btn.secondary{background:#fff;color:var(--text);border:1.5px solid var(--border)}
+.btn.danger{background:var(--danger)}
+.btn.success{background:var(--success)}
+.btn.warning{background:var(--warning)}
+.btn.purple{background:var(--purple)}
+.btn.small{padding:7px 12px;font-size:13px}
+.btn.full{width:100%}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+
+/* ============ FAB ============ */
+.fab{
+  position:fixed;right:20px;
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  width:60px;height:60px;border-radius:50%;
+  background:var(--accent);color:#fff;border:none;
+  font-size:32px;font-weight:300;line-height:1;
+  box-shadow:0 6px 20px rgba(232,160,32,.55);
+  z-index:40;display:flex;align-items:center;justify-content:center;
+}
+.fab:active{transform:scale(.92)}
+
+/* ============ MODAL ============ */
+.modal{
+  position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);
+  display:flex;align-items:flex-end;justify-content:center;
+  animation:fadeIn .2s;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-content{
+  background:#fff;width:100%;max-width:640px;
+  max-height:92vh;max-height:92dvh;
+  border-radius:20px 20px 0 0;
+  display:flex;flex-direction:column;
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  background:#fff;border-radius:20px 20px 0 0;
+}
+.modal-header h2{font-size:16px;color:var(--primary);font-weight:700}
+.modal-header button{
+  background:none;border:none;font-size:24px;color:var(--muted);
+  padding:0 4px;line-height:1;
+}
+.modal-body{
+  padding:16px 20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+  overflow-y:auto;flex:1;
+}
+
+/* ============ FORMS ============ */
+.form-group{margin-bottom:14px}
+.form-group label{
+  display:block;font-size:12px;font-weight:700;
+  margin-bottom:6px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.4px;
+}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:12px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:15px;background:#fff;color:var(--text);
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(26,84,144,.1);
+}
+.form-group textarea{min-height:70px;resize:vertical}
+.form-row{display:flex;gap:10px}
+.form-row>*{flex:1}
+@media(max-width:480px){.form-row{flex-direction:column;gap:0}}
+.form-required::after{content:" *";color:var(--danger)}
+
+/* ============ PHOTO UPLOAD ============ */
+.photo-upload{
+  display:flex;flex-direction:column;align-items:center;
+  gap:10px;padding:16px;background:var(--bg);border-radius:12px;
+  margin-bottom:14px;
+}
+.photo-preview{
+  width:110px;height:110px;border-radius:50%;
+  background:#e5e7eb;display:flex;align-items:center;justify-content:center;
+  font-size:44px;color:var(--muted);overflow:hidden;
+  border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.1);
+  background-size:cover;background-position:center;
+}
+.photo-preview img{width:100%;height:100%;object-fit:cover}
+.photo-actions{display:flex;gap:8px}
+.photo-actions label{
+  cursor:pointer;padding:8px 14px;background:#fff;border:1.5px solid var(--border);
+  border-radius:8px;font-size:13px;font-weight:600;color:var(--primary);
+}
+.photo-actions label:active{background:var(--bg)}
+.photo-actions input[type=file]{display:none}
+
+/* ============ SOUL AVATAR ============ */
+.soul-avatar{
+  width:46px;height:46px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:17px;margin-right:12px;
+  background-size:cover;background-position:center;
+}
+
+/* ============ LISTS ============ */
+.search-bar{display:flex;gap:8px;margin-bottom:12px}
+.search-bar input{
+  flex:1;padding:12px 16px;border:1.5px solid var(--border);
+  border-radius:12px;font-size:15px;background:#fff;
+}
+.search-bar input:focus{outline:none;border-color:var(--primary)}
+
+.list-item{
+  background:#fff;border-radius:var(--radius);
+  padding:12px 14px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:var(--shadow);cursor:pointer;
+  transition:background .15s;
+}
+.list-item:active{background:#f8f9fb}
+.list-item .info{flex:1;min-width:0}
+.list-item .name{font-weight:600;font-size:15px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item .meta{font-size:12px;color:var(--muted);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item .chev{color:var(--muted);font-size:22px;flex-shrink:0;margin-left:8px}
+
+/* ============ TAGS ============ */
+.tag{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+.tag.gray{background:#e5e7eb;color:#4b5563}
+.tag.blue{background:#dbeafe;color:#1e40af}
+.tag.green{background:#d1fae5;color:#065f46}
+.tag.orange{background:#ffedd5;color:#9a3412}
+.tag.red{background:#fee2e2;color:#991b1b}
+.tag.purple{background:#ede9fe;color:#5b21b6}
+
+/* ============ CHECKLIST ============ */
+.checklist{display:flex;flex-direction:column;gap:8px}
+.check-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px;background:var(--bg);border-radius:10px;
+  cursor:pointer;
+}
+.check-item.done{background:#d1fae5}
+.check-item .circle{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid var(--muted);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;flex-shrink:0;
+}
+.check-item.done .circle{background:var(--success);border-color:var(--success)}
+.check-item .text{flex:1;font-size:14px;font-weight:500}
+.check-item .date{font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+
+/* ============ MONTH GRID ============ */
+.month-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:8px;margin:12px 0;
+}
+@media(min-width:500px){.month-grid{grid-template-columns:repeat(6,1fr)}}
+.month-cell{
+  aspect-ratio:1;border-radius:10px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;cursor:pointer;
+  background:#e5e7eb;color:var(--muted);
+}
+.month-cell.done{background:var(--success);color:#fff}
+.month-cell.current{outline:3px solid var(--accent);outline-offset:1px}
+.month-cell small{font-size:9px;font-weight:400;opacity:.8}
+
+/* ============ PROGRESS BARS ============ */
+.progress-bar{
+  background:#e5e7eb;height:10px;border-radius:6px;
+  overflow:hidden;margin-top:4px;
+}
+.progress-bar>div{
+  background:linear-gradient(90deg,var(--primary),var(--accent));
+  height:100%;transition:width .4s;
+}
+.progress-row{margin-bottom:12px}
+.progress-row .top{
+  display:flex;justify-content:space-between;
+  font-size:13px;margin-bottom:4px;font-weight:500;
+}
+
+/* ============ CHARTS ============ */
+.chart-wrap{
+  background:#fff;border-radius:12px;padding:16px;
+  margin-bottom:12px;box-shadow:var(--shadow);
+}
+.chart-wrap h4{
+  font-size:13px;color:var(--primary);margin-bottom:14px;
+  text-transform:uppercase;letter-spacing:.5px;font-weight:700;
+}
+.bar-chart{display:flex;flex-direction:column;gap:10px}
+.bar-item{display:flex;align-items:center;gap:10px}
+.bar-label{
+  width:110px;font-size:12px;font-weight:600;
+  color:var(--text);flex-shrink:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bar-track{
+  flex:1;background:#f1f5f9;height:22px;border-radius:6px;
+  overflow:hidden;position:relative;
+}
+.bar-fill{
+  height:100%;border-radius:6px;
+  background:linear-gradient(90deg,var(--primary),var(--accent));
+  transition:width .5s ease;
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:8px;color:#fff;font-size:11px;font-weight:700;
+}
+
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center}
+.donut{position:relative;width:140px;height:140px}
+.donut svg{transform:rotate(-90deg)}
+.donut .center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.donut .center .big{font-size:26px;font-weight:700;color:var(--primary);line-height:1}
+.donut .center .small{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.donut-legend{display:flex;flex-direction:column;gap:6px;font-size:12px}
+.legend-item{display:flex;align-items:center;gap:8px}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.legend-item b{margin-left:auto;padding-left:12px;color:var(--primary)}
+
+.monthly-chart{
+  display:flex;align-items:flex-end;gap:6px;
+  height:140px;padding:8px 4px;border-bottom:1px solid var(--border);
+  overflow-x:auto;
+}
+.monthly-col{
+  flex:1;min-width:24px;display:flex;flex-direction:column;
+  align-items:center;gap:4px;height:100%;justify-content:flex-end;
+}
+.monthly-bar{
+  width:100%;background:linear-gradient(180deg,var(--accent),var(--primary));
+  border-radius:4px 4px 0 0;min-height:4px;
+  transition:height .5s ease;
+}
+.monthly-col .lbl{font-size:10px;color:var(--muted);font-weight:600}
+.monthly-col .val{font-size:10px;color:var(--primary);font-weight:700}
+
+/* ============ EMPTY ============ */
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty .icon{font-size:52px;margin-bottom:12px;opacity:.4}
+.empty .msg{font-size:14px;margin-bottom:16px}
+
+/* ============ TOAST ============ */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(100px + env(safe-area-inset-bottom));
+  background:#1f2937;color:#fff;
+  padding:13px 24px;border-radius:30px;
+  font-size:14px;z-index:300;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  animation:toastIn .3s ease;
+  max-width:90vw;text-align:center;
+}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ============ DETAIL HEADER ============ */
+.detail-head{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;border-radius:var(--radius);padding:18px;
+  margin-bottom:12px;display:flex;gap:14px;align-items:center;
+}
+.detail-head .avatar{
+  width:70px;height:70px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;
+  background-size:cover;background-position:center;
+}
+.detail-head .content{flex:1;min-width:0}
+.detail-head h2{font-size:18px;margin-bottom:4px}
+.detail-head .meta{font-size:12px;opacity:.92;line-height:1.55}
+
+/* ============ USERS ============ */
+.user-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px;background:#fff;border-radius:12px;
+  margin-bottom:8px;box-shadow:var(--shadow);
+}
+.user-item .role{
+  padding:4px 10px;border-radius:20px;font-size:10px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  color:#fff;flex-shrink:0;
+}
+.role.central{background:var(--primary)}
+.role.zone{background:var(--purple)}
+.role.sous{background:var(--success)}
+.role.secteur{background:var(--warning)}
+.role.evangeliste{background:var(--accent)}
+.role.pasteur{background:var(--muted)}
+
+/* ============ HISTORY ============ */
+.history-item{
+  font-size:12px;color:var(--muted);
+  padding:6px 0;border-bottom:1px dashed var(--border);
+  display:flex;gap:6px;
+}
+.history-item b{color:var(--text);flex-shrink:0}
+
+/* ============ PERMISSION NOTICE ============ */
+.perm-notice{
+  background:#fff7ed;border-left:4px solid var(--warning);
+  padding:12px;border-radius:8px;font-size:13px;
+  color:#9a3412;margin-bottom:12px;line-height:1.5;
+}
+
+/* ============ DESKTOP ============ */
+@media(min-width:900px){
+  .sidebar{left:0}
+  #app{padding-left:280px}
+  .menu-btn,.backdrop{display:none}
+  .fab{right:30px;bottom:30px}
+  .modal{align-items:center}
+  .modal-content{border-radius:20px;max-height:85vh;margin:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================= LOGIN ============================= -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">D</div>
+    <h1>DEME</h1>
+    <p class="sub">Suivi des Âmes · CMCI-CI</p>
+
+    <div class="login-tabs">
+      <button id="tabCentral" class="active" onclick="App.switchLoginTab('central')">Direction Centrale</button>
+      <button id="tabUser" onclick="App.switchLoginTab('user')">Utilisateur</button>
+    </div>
+
+    <!-- Connexion central (mot de passe maître) -->
+    <div id="loginCentral">
+      <input type="password" id="loginPassword" placeholder="Mot de passe maître" autocomplete="current-password">
+      <button onclick="App.login()">Se connecter</button>
+    </div>
+
+    <!-- Connexion utilisateur (nom + code) -->
+    <div id="loginUser" class="hidden">
+      <input type="text" id="loginUserName" placeholder="Nom d'utilisateur" autocomplete="username">
+      <input type="password" id="loginUserCode" placeholder="Code d'accès" autocomplete="current-password">
+      <button onclick="App.loginUser()">Se connecter</button>
+    </div>
+
+    <span class="err" id="loginError"></span>
+
+    <!-- Bouton code de déploiement -->
+    <button class="btn secondary full" onclick="App.openImportDeployCode()" style="margin-top:14px">
+      📦 J'ai un code de déploiement
+    </button>
+
+    <span class="hint" id="loginHint">
+      <b>Direction Centrale :</b> mot de passe maître par défaut <b>deme2026</b><br>
+      <b>Utilisateurs :</b> utilisez le code de déploiement reçu
+    </span>
+
+    <div class="login-signature">
+      <b>Conçu par Jean Marc Olivier KOFFI</b>
+      Disciple d'Ettien Antoine EDJA
+      <span class="tel">📞 07 47 28 46 94</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= APP ============================= -->
+<div id="app" class="hidden">
+
+  <header class="topbar">
+    <button class="menu-btn" onclick="App.toggleMenu()">☰</button>
+    <h1 id="pageTitle">Tableau de bord</h1>
+    <span class="role-badge" id="roleBadge">CENTRAL</span>
+  </header>
+
+  <div id="backdrop" class="backdrop" onclick="App.toggleMenu()"></div>
+
+  <nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <strong>DEME</strong>
+      <small id="sidebarRole">Direction Centrale</small>
+      <span class="role-tag" id="sidebarRoleTag">CENTRAL</span>
+    </div>
+    <ul id="navMenu">
+      <li data-page="dashboard" onclick="App.nav('dashboard')">📊 Tableau de bord</li>
+      <li data-page="structure" onclick="App.nav('structure')">🏛️ Structure</li>
+      <li data-page="evangelists" onclick="App.nav('evangelists')">👤 Évangélistes</li>
+      <li data-page="activities" onclick="App.nav('activities')">🎯 Activités</li>
+      <li data-page="souls" onclick="App.nav('souls')">🕊️ Âmes</li>
+      <li data-page="stats" onclick="App.nav('stats')">📈 Statistiques</li>
+      <li data-page="transfer" onclick="App.nav('transfer')">🔄 Import / Export</li>
+      <li data-page="settings" onclick="App.nav('settings')">⚙️ Paramètres</li>
+      <li class="logout" onclick="App.logout()">🚪 Déconnexion</li>
+    </ul>
+    <div class="sidebar-footer">
+      <b>Conçu par Jean Marc Olivier KOFFI</b>
+      Disciple d'Ettien Antoine EDJA<br>
+      <span class="tel">📞 07 47 28 46 94</span>
+    </div>
+  </nav>
+
+  <main id="main" class="main"></main>
+
+  <footer class="app-footer">
+    <b>DEME · Suivi des Âmes v3.0</b>
+    Conçu par Jean Marc Olivier KOFFI<br>
+    Disciple d'Ettien Antoine EDJA
+    <span class="tel">📞 07 47 28 46 94</span>
+  </footer>
+
+  <button class="fab" id="fabBtn" onclick="App.quickAdd()">+</button>
+</div>
+
+<!-- ============================= MODAL ============================= -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle">Titre</h2>
+      <button onclick="App.closeModal()">✕</button>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+/* ================================================================
+   DEME v3.0 – Suivi des Âmes
+   Photos · Graphiques · Multi-utilisateurs · Code de déploiement
+   Choix du chemin d'export · Signature auteur
+   Conçu par Jean Marc Olivier KOFFI (07 47 28 46 94)
+   ================================================================ */
+
+const DB_NAME = 'deme_db';
+const DB_VERSION = 3;
+const DEFAULT_PASSWORD = 'deme2026';
+const API_URL = localStorage.getItem('deme_api') || 'https://script.google.com/macros/s/AKfycbw9CILCyTzFzk23HgNOC17MVXiXtMjOr8uoAnYF7jRQwTunM78aX6RayV0lWAgzjyhz/exec';
+const SYNC_STORES = ['zones','subcenters','sectors','houses','evangelists','souls','activities'];
+
+let db = null;
+let currentUser = null;
+let currentPage = 'dashboard';
+
+/* ---------------- RÔLES & PERMISSIONS ---------------- */
+const ROLES = {
+  central:      { label:'Direction Centrale', short:'CENTRAL',     order:0 },
+  zone:         { label:'Responsable de Zone', short:'ZONE',       order:1 },
+  sous:         { label:'Responsable Sous-centre', short:'SOUS-CENTRE', order:2 },
+  secteur:      { label:'Responsable de Secteur', short:'SECTEUR', order:3 },
+  evangeliste:  { label:'Évangéliste', short:'ÉVANGÉLISTE',        order:4 },
+  pasteur:      { label:'Pasteur / Resp. Assemblée', short:'PASTEUR', order:5 }
+};
+
+const PERMISSIONS = {
+  central:     ['dashboard','activities','structure','evangelists','souls','stats','transfer','settings'],
+  zone:        ['dashboard','activities','structure','evangelists','souls','stats','transfer'],
+  sous:        ['dashboard','activities','structure','evangelists','souls','stats','transfer'],
+  secteur:     ['dashboard','activities','structure','evangelists','souls','stats','transfer'],
+  evangeliste: ['dashboard','activities','souls','stats'],
+  pasteur:     ['dashboard','souls']
+};
+
+/* ---------------- INDEXEDDB ---------------- */
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('config'))     d.createObjectStore('config', { keyPath:'key' });
+      if (!d.objectStoreNames.contains('zones'))      d.createObjectStore('zones', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('subcenters')) d.createObjectStore('subcenters', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('sectors'))    d.createObjectStore('sectors', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('houses'))     d.createObjectStore('houses', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('evangelists'))d.createObjectStore('evangelists', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('souls'))      d.createObjectStore('souls', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('audit'))      d.createObjectStore('audit', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('users'))      d.createObjectStore('users', { keyPath:'id' });
+      if (!d.objectStoreNames.contains('activities')) d.createObjectStore('activities', { keyPath:'id' });
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+function tx(store, mode='readonly') { return db.transaction(store, mode).objectStore(store); }
+function dbGet(store, key) {
+  return new Promise((res, rej) => {
+    const r = tx(store).get(key);
+    r.onsuccess = () => res(r.result && r.result._deleted ? undefined : r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+function dbAll(store) {
+  return new Promise((res, rej) => {
+    const r = tx(store).getAll();
+    r.onsuccess = () => res((r.result || []).filter(x => !x._deleted));
+    r.onerror = () => rej(r.error);
+  });
+}
+function dbGetRaw(store, key) {
+  return new Promise((res, rej) => { const r = tx(store).get(key); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+}
+function dbAllRaw(store) {
+  return new Promise((res, rej) => { const r = tx(store).getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); });
+}
+function dbPut(store, obj, raw) {
+  if (!raw && (SYNC_STORES.includes(store) || (store === 'config' && obj.key === 'objectives'))) { obj.updatedAt = Date.now(); obj._dirty = 1; }
+  return new Promise((res, rej) => {
+    const r = tx(store, 'readwrite').put(obj);
+    r.onsuccess = () => { if (!raw && obj._dirty) Sync.kick(); res(obj); };
+    r.onerror = () => rej(r.error);
+  });
+}
+function dbDel(store, key) {
+  if (SYNC_STORES.includes(store)) return dbPut(store, { id: key, _deleted: 1 });
+  return new Promise((res, rej) => {
+    const r = tx(store, 'readwrite').delete(key);
+    r.onsuccess = () => res();
+    r.onerror = () => rej(r.error);
+  });
+}
+function dbClear(store) {
+  return new Promise((res, rej) => {
+    const r = tx(store, 'readwrite').clear();
+    r.onsuccess = () => res();
+    r.onerror = () => rej(r.error);
+  });
+}
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtDate = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+
+/* ================= APP ================= */
+/* ---------------- SYNCHRONISATION EN LIGNE ---------------- */
+const Sync = {
+  busy: false, timer: null, started: false,
+  tok() { return localStorage.getItem('deme_tok'); },
+  pill(t) {
+    let el = document.getElementById('syncPill');
+    if (!el) {
+      el = document.createElement('div'); el.id = 'syncPill';
+      el.style.cssText = 'position:fixed;bottom:10px;left:10px;font-size:12px;background:#0b1f3a;color:#fff;padding:5px 10px;border-radius:14px;z-index:9999;cursor:pointer;opacity:.92';
+      el.onclick = () => Sync.run(true); document.body.appendChild(el);
+    }
+    el.textContent = t;
+  },
+  async api(body) {
+    const r = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ token: this.tok() }, body)) });
+    const j = await r.json();
+    if (j.error === 'auth') { localStorage.removeItem('deme_tok'); localStorage.removeItem('deme_user'); location.reload(); throw new Error('Session expirée'); }
+    if (!j.ok) throw new Error(j.error || 'Erreur serveur');
+    return j;
+  },
+  async dirty() {
+    const out = [];
+    for (const s of SYNC_STORES.concat(['config']))
+      for (const r of await dbAllRaw(s)) if (r._dirty && (s !== 'config' || r.key === 'objectives')) out.push([s, r]);
+    return out;
+  },
+  async migrate() {
+    if (localStorage.getItem('deme_migrated')) return;
+    for (const s of SYNC_STORES) for (const r of await dbAllRaw(s)) {
+      if (r.updatedAt) continue;
+      r.updatedAt = Date.parse(r.createdAt || r.date || '') || 1; r._dirty = 1; await dbPut(s, r, true);
+    }
+    localStorage.setItem('deme_migrated', '1');
+  },
+  kick() { clearTimeout(this.timer); this.timer = setTimeout(() => this.run(), 1500); },
+  async run(manual) {
+    if (!API_URL || !this.tok() || this.busy) return;
+    if (!navigator.onLine) { this.pill('⚠ Hors ligne'); return; }
+    this.busy = true; this.pill('⏳ Synchronisation…');
+    let changed = false;
+    try {
+      const d = await this.dirty();
+      for (let i = 0; i < d.length; i += 100) {
+        const chunk = d.slice(i, i + 100);
+        const records = chunk.map(([s, r]) => {
+          const o = Object.assign({}, r); delete o._dirty; delete o.photo;
+          return { store:s, id: s === 'config' ? r.key : r.id, updatedAt: r.updatedAt || 0, deleted: !!r._deleted, data: r._deleted ? null : o };
+        });
+        await this.api({ action:'push', records });
+        for (const [s, r] of chunk) {
+          const cur = await dbGetRaw(s, s === 'config' ? r.key : r.id);
+          if (cur && cur.updatedAt === r.updatedAt) { delete cur._dirty; await dbPut(s, cur, true); }
+        }
+      }
+      let since = +localStorage.getItem('deme_since') || 0, more = true, guard = 0;
+      while (more && guard++ < 50) {
+        const j = await this.api({ action:'pull', since });
+        for (const m of j.records) {
+          const loc = await dbGetRaw(m.store, m.id);
+          if (loc && (loc.updatedAt || 0) > m.updatedAt) continue;
+          if (loc && loc.updatedAt === m.updatedAt && !loc._dirty) continue;
+          let rec = m.deleted ? { id: m.id, _deleted: 1, updatedAt: m.updatedAt } : m.data;
+          if (!m.deleted && loc && loc.photo && !rec.photo) rec.photo = loc.photo;
+          await dbPut(m.store, rec, true); changed = true;
+        }
+        since = j.since; more = j.more;
+      }
+      localStorage.setItem('deme_since', String(since));
+    } catch (e) { this.busy = false; this.pill('⚠ ' + (e.message || 'Erreur')); return; }
+    this.busy = false; this.pill('✅ À jour');
+    if (changed && document.getElementById('modal').classList.contains('hidden')) App.nav(currentPage);
+  },
+  async start() {
+    if (this.started) return; this.started = true;
+    await this.migrate();
+    window.addEventListener('online', () => this.run());
+    setInterval(() => this.run(), 60000);
+    this.run();
+  }
+};
+
+const App = {
+
+  async init() {
+    db = await openDB();
+    this.addServerLink();
+    if (API_URL) {
+      const u = JSON.parse(localStorage.getItem('deme_user') || 'null');
+      if (u && localStorage.getItem('deme_tok')) { currentUser = u; this.showApp(); }
+      return;
+    }
+    const session = await dbGet('config','session');
+    if (session && session.value && session.userId) {
+      const u = await dbGet('users', session.userId);
+      const masterUser = await dbGet('config','masterUser');
+      if (u) { currentUser = u; this.showApp(); return; }
+      if (session.userId === 'MASTER' && masterUser) {
+        currentUser = masterUser.value; this.showApp(); return;
+      }
+    }
+  },
+
+  switchLoginTab(tab) {
+    document.getElementById('tabCentral').classList.toggle('active', tab === 'central');
+    document.getElementById('tabUser').classList.toggle('active', tab === 'user');
+    document.getElementById('loginCentral').classList.toggle('hidden', tab !== 'central');
+    document.getElementById('loginUser').classList.toggle('hidden', tab !== 'user');
+    document.getElementById('loginError').textContent = '';
+  },
+
+  addServerLink() {
+    const d = document.createElement('div');
+    d.style.cssText = 'text-align:center;margin:14px 0;font-size:13px';
+    d.innerHTML = '<a href="#" style="color:inherit" onclick="App.setServer();return false">🌐 Serveur : ' + (API_URL ? 'connecté (modifier)' : 'non configuré (mode local)') + '</a>';
+    document.getElementById('loginScreen').appendChild(d);
+  },
+  setServer() {
+    const v = prompt('Adresse du serveur DEME (URL Apps Script ; vide = mode local) :', API_URL);
+    if (v === null) return;
+    if (v.trim()) localStorage.setItem('deme_api', v.trim()); else localStorage.removeItem('deme_api');
+    localStorage.removeItem('deme_since'); localStorage.removeItem('deme_migrated');
+    location.reload();
+  },
+  async onlineLogin(name, pass) {
+    const err = document.getElementById('loginError');
+    if (!name || !pass) { err.textContent = 'Nom et mot de passe requis'; return; }
+    err.textContent = 'Connexion…';
+    try {
+      const r = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify({ action:'login', name, pass }) });
+      const j = await r.json();
+      if (!j.ok) { err.textContent = 'Identifiants invalides'; return; }
+      localStorage.setItem('deme_tok', j.token); localStorage.setItem('deme_user', JSON.stringify(j.user));
+      currentUser = j.user; err.textContent = ''; this.showApp();
+    } catch (e) { err.textContent = 'Serveur injoignable : vérifiez la connexion'; }
+  },
+
+  async login() {
+    if (API_URL) return this.onlineLogin('central', document.getElementById('loginPassword').value);
+    const pass = document.getElementById('loginPassword').value;
+    const stored = await dbGet('config','password');
+    const valid = stored ? stored.value : DEFAULT_PASSWORD;
+    if (pass === valid) {
+      currentUser = { id:'MASTER', role:'central', name:'Direction Centrale' };
+      await dbPut('config', { key:'masterUser', value: currentUser });
+      await dbPut('config', { key:'session', value:{ value:true, userId:'MASTER' } });
+      await this.log('login', 'Direction Centrale');
+      this.showApp();
+    } else {
+      document.getElementById('loginError').textContent = 'Mot de passe incorrect';
+      document.getElementById('loginPassword').value = '';
+    }
+  },
+
+  async loginUser() {
+    const name = document.getElementById('loginUserName').value.trim().toLowerCase();
+    const code = document.getElementById('loginUserCode').value.trim();
+    if (!name || !code) return document.getElementById('loginError').textContent = 'Nom et code requis';
+    if (API_URL) return this.onlineLogin(name, code);
+
+    const users = await dbAll('users');
+    const u = users.find(x => x.name.toLowerCase() === name && x.code === code && x.active !== false);
+    if (u) {
+      currentUser = u;
+      await dbPut('config', { key:'session', value:{ value:true, userId:u.id } });
+      await this.log('login', u.name + ' (' + ROLES[u.role].label + ')');
+      this.showApp();
+    } else {
+      document.getElementById('loginError').textContent = 'Identifiants invalides';
+    }
+  },
+
+  async logout() {
+    if (!confirm('Se déconnecter ?')) return;
+    await dbPut('config', { key:'session', value:{ value:false } });
+    localStorage.removeItem('deme_tok'); localStorage.removeItem('deme_user');
+    location.reload();
+  },
+
+  canAccess(page) {
+    return (PERMISSIONS[currentUser.role] || []).includes(page);
+  },
+
+  showApp() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('userBadge') && (document.getElementById('userBadge').textContent = currentUser.name);
+    document.getElementById('sidebarRole').textContent = currentUser.name;
+    document.getElementById('roleBadge').textContent = ROLES[currentUser.role].short;
+    document.getElementById('sidebarRoleTag').textContent = ROLES[currentUser.role].short;
+
+    document.querySelectorAll('#navMenu li[data-page]').forEach(li => {
+      li.style.display = this.canAccess(li.dataset.page) ? 'flex' : 'none';
+    });
+
+    this.nav('dashboard');
+    if (API_URL) Sync.start();
+  },
+
+  toggleMenu() {
+    const sb = document.getElementById('sidebar');
+    const bd = document.getElementById('backdrop');
+    const open = sb.classList.toggle('open');
+    bd.classList.toggle('show', open);
+  },
+
+  closeMenu() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('backdrop').classList.remove('show');
+  },
+
+  async nav(page) {
+    if (!this.canAccess(page)) {
+      this.toast('Accès non autorisé');
+      return;
+    }
+    currentPage = page;
+    this.closeMenu();
+    document.querySelectorAll('.sidebar li[data-page]').forEach(li => {
+      li.classList.toggle('active', li.dataset.page === page);
+    });
+    const titles = {
+      dashboard:'Tableau de bord', structure:'Structure DEME',
+      evangelists:'Évangélistes', activities:'Activités des évangélistes', souls:'Âmes', stats:'Statistiques',
+      transfer:'Import / Export', settings:'Paramètres'
+    };
+    document.getElementById('pageTitle').textContent = titles[page] || page;
+    const main = document.getElementById('main');
+    main.innerHTML = '<div class="empty"><div class="msg">Chargement…</div></div>';
+    try {
+      const map = {
+        dashboard: () => this.renderDashboard(),
+        structure: () => this.renderStructure(),
+        evangelists: () => this.renderEvangelists(),
+        activities: () => this.renderActivities(),
+        souls: () => this.renderSouls(),
+        stats: () => this.renderStats(),
+        transfer: () => this.renderTransfer(),
+        settings: () => this.renderSettings()
+      };
+      if (map[page]) await map[page]();
+    } catch (e) {
+      main.innerHTML = `<div class="empty"><div class="icon">⚠️</div><div class="msg">${e.message}</div></div>`;
+    }
+    window.scrollTo(0,0);
+  },
+
+  toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.remove('hidden');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(() => t.classList.add('hidden'), 2400);
+  },
+
+  openModal(title, html) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  },
+  closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+    document.body.style.overflow = '';
+  },
+
+  async log(action, details) {
+    try {
+      await dbPut('audit', {
+        id: uid(), date: new Date().toISOString(),
+        user: currentUser ? currentUser.name : '?',
+        role: currentUser ? currentUser.role : '?',
+        action, details: details || ''
+      });
+    } catch(e){}
+  },
+
+  esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  },
+
+  initials(soul) {
+    const a = (soul.nom || '').trim().charAt(0);
+    const b = (soul.prenoms || '').trim().charAt(0);
+    return (a + b).toUpperCase() || '?';
+  },
+
+  /* ============ DASHBOARD ============ */
+  async renderDashboard() {
+    const [souls, evs] = await Promise.all([dbAll('souls'), dbAll('evangelists')]);
+    const total = souls.length;
+    const integrated = souls.filter(s => s.parcours?.integration).length;
+    const baptized = souls.filter(s => s.parcours?.bapteme).length;
+    const inProgress = souls.filter(s => s.statut === 'en_cours').length;
+    const lost = souls.filter(s => s.statut === 'perdu').length;
+
+    document.getElementById('main').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-box"><div class="num">${total}</div><div class="lbl">Âmes</div></div>
+        <div class="stat-box success"><div class="num">${integrated}</div><div class="lbl">Intégrées</div></div>
+        <div class="stat-box accent"><div class="num">${baptized}</div><div class="lbl">Baptisées</div></div>
+        <div class="stat-box warning"><div class="num">${inProgress}</div><div class="lbl">En cours</div></div>
+        <div class="stat-box danger"><div class="num">${lost}</div><div class="lbl">Perdues</div></div>
+        <div class="stat-box"><div class="num">${evs.length}</div><div class="lbl">Évangélistes</div></div>
+      </div>
+
+      <div class="card">
+        <h3>⚡ Actions rapides</h3>
+        <div class="btn-row">
+          <button class="btn" onclick="App.openSoulForm()">🕊️ Nouvelle âme</button>
+          ${this.canAccess('evangelists') ? `<button class="btn secondary" onclick="App.openEvangelistForm()">👤 Évangéliste</button>` : ''}
+          ${this.canAccess('transfer') ? `<button class="btn secondary" onclick="App.nav('transfer')">🔄 Export</button>` : ''}
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <h4>📊 Répartition des statuts</h4>
+        ${this.renderDonutChart([
+          { label:'Intégrées', value: integrated, color:'#10b981' },
+          { label:'Baptisées', value: baptized - integrated, color:'#1a5490' },
+          { label:'En cours', value: inProgress - baptized, color:'#f59e0b' },
+          { label:'Perdues', value: lost, color:'#ef4444' }
+        ], total, 'ÂMES')}
+      </div>
+
+      <div class="card">
+        <h3>✝️ Progression du parcours</h3>
+        ${this.renderProgressBars(souls)}
+      </div>
+
+      <div class="chart-wrap">
+        <h4>📈 Suivis mensuels réalisés</h4>
+        ${this.renderMonthlyChart(souls)}
+      </div>
+
+      <div class="card">
+        <h3>🕊️ Âmes récentes</h3>
+        ${souls.length === 0
+          ? '<div class="empty"><div class="icon">🕊️</div><div class="msg">Aucune âme enregistrée</div></div>'
+          : souls.slice(-5).reverse().map(s => `
+              <div class="list-item" onclick="App.openSoulDetail('${s.id}')">
+                <div class="soul-avatar" style="${s.photo ? `background-image:url('${s.photo}')` : ''}">
+                  ${s.photo ? '' : this.initials(s)}
+                </div>
+                <div class="info">
+                  <div class="name">${this.esc(s.nom)} ${this.esc(s.prenoms||'')}</div>
+                  <div class="meta">${s.conduiteDate ? 'Conduite le ' + fmtDate(s.conduiteDate) : '—'}</div>
+                </div>
+                <div class="chev">›</div>
+              </div>
+            `).join('')}
+      </div>
+    `;
+  },
+
+  renderProgressBars(souls) {
+    const steps = [
+      { key:'conduite', label:'Conduite à Christ' },
+      { key:'repentance', label:'Repentance' },
+      { key:'bapteme', label:'Baptême' },
+      { key:'premiereAdoration', label:'Première adoration' },
+      { key:'brisement', label:'Brisement de liens' },
+      { key:'integration', label:'Intégration' }
+    ];
+    const total = souls.length || 1;
+    return steps.map(s => {
+      const count = souls.filter(x => x.parcours?.[s.key]).length;
+      const pct = Math.round((count/total)*100);
+      return `
+        <div class="progress-row">
+          <div class="top"><span>${s.label}</span><span><b>${count}</b> · ${pct}%</span></div>
+          <div class="progress-bar"><div style="width:${pct}%"></div></div>
+        </div>`;
+    }).join('');
+  },
+
+  /* ============ CHARTS ============ */
+  renderDonutChart(data, total, centerLabel) {
+    const filtered = data.filter(d => d.value > 0);
+    if (filtered.length === 0) {
+      return `<div class="empty" style="padding:20px"><div class="msg">Aucune donnée</div></div>`;
+    }
+    const size = 140, stroke = 22, r = (size - stroke) / 2;
+    const circ = 2 * Math.PI * r;
+    let offset = 0;
+
+    const segments = filtered.map(d => {
+      const pct = total > 0 ? d.value / total : 0;
+      const dash = pct * circ;
+      const seg = `<circle cx="${size/2}" cy="${size/2}" r="${r}"
+        fill="none" stroke="${d.color}" stroke-width="${stroke}"
+        stroke-dasharray="${dash} ${circ - dash}"
+        stroke-dashoffset="${-offset}"/>`;
+      offset += dash;
+      return seg;
+    }).join('');
+
+    const legend = data.filter(d => d.value > 0).map(d => `
+      <div class="legend-item">
+        <span class="legend-dot" style="background:${d.color}"></span>
+        <span>${d.label}</span>
+        <b>${d.value}</b>
+      </div>`).join('');
+
+    return `
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg width="${size}" height="${size}">
+            <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#f1f5f9" stroke-width="${stroke}"/>
+            ${segments}
+          </svg>
+          <div class="center">
+            <div class="big">${total}</div>
+            <div class="small">${centerLabel}</div>
+          </div>
+        </div>
+        <div class="donut-legend">${legend}</div>
+      </div>
+    `;
+  },
+
+  renderMonthlyChart(souls) {
+    const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    const counts = Array(12).fill(0);
+    const year = new Date().getFullYear();
+
+    souls.forEach(s => {
+      (s.suivi?.mois || []).forEach(m => {
+        if (m && m.date) {
+          const d = new Date(m.date);
+          if (d.getFullYear() === year) counts[d.getMonth()]++;
+        }
+      });
+    });
+
+    const max = Math.max(...counts, 1);
+    return `
+      <div class="monthly-chart">
+        ${counts.map((c, i) => {
+          const h = (c / max) * 100;
+          return `
+            <div class="monthly-col">
+              <div class="val">${c > 0 ? c : ''}</div>
+              <div class="monthly-bar" style="height:${Math.max(h, 4)}%"></div>
+              <div class="lbl">${months[i]}</div>
+            </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">
+        Année ${year}
+      </div>
+    `;
+  },
+
+  renderBarChart(items, total) {
+    if (items.length === 0) return '<div class="empty" style="padding:20px"><div class="msg">Aucune donnée</div></div>';
+    const max = Math.max(...items.map(i => i.value), 1);
+    return `
+      <div class="bar-chart">
+        ${items.map(it => {
+          const pct = Math.round((it.value / max) * 100);
+          return `
+            <div class="bar-item">
+              <div class="bar-label">${this.esc(it.label)}</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:${pct}%;background:${it.color || 'linear-gradient(90deg,var(--primary),var(--accent))'}">
+                  ${it.value > 0 ? it.value : ''}
+                </div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  },
+
+  /* ============ STRUCTURE ============ */
+  async renderStructure() {
+    const [zones, subs, sects, houses] = await Promise.all([
+      dbAll('zones'), dbAll('subcenters'), dbAll('sectors'), dbAll('houses')
+    ]);
+
+    let html = `
+      <div class="btn-row">
+        <button class="btn" onclick="App.openZoneForm()">+ Zone</button>
+        <button class="btn secondary" onclick="App.openZonesBulk()">+ Plusieurs zones</button>
+        <button class="btn secondary" onclick="App.openSubForm()">+ Sous-centre</button>
+        <button class="btn secondary" onclick="App.openSectForm()">+ Secteur</button>
+        <button class="btn secondary" onclick="App.openHouseForm()">+ Assemblée</button>
+      </div>
+    `;
+
+    if (zones.length === 0) {
+      html += '<div class="empty"><div class="icon">🏛️</div><div class="msg">Aucune zone créée</div></div>';
+    } else {
+      html += zones.map(z => {
+        const scs = subs.filter(s => s.zoneId === z.id);
+        return `
+          <div class="card">
+            <h3>🏢 ${this.esc(z.nom)} ${this.nodeBtns('zones',z.id)}</h3>
+            ${scs.map(sc => {
+              const ses = sects.filter(s => s.subId === sc.id);
+              return `
+                <div style="margin-left:12px;border-left:3px solid var(--primary);padding-left:10px;margin-bottom:10px">
+                  <div style="font-weight:600;padding:4px 0">🏬 ${this.esc(sc.nom)} ${this.nodeBtns('subcenters',sc.id)}</div>
+                  ${ses.map(se => {
+                    const hs = houses.filter(h => h.sectId === se.id);
+                    return `
+                      <div style="margin-left:12px;border-left:2px solid var(--accent);padding-left:10px;margin-bottom:6px">
+                        <div style="font-size:13px;padding:2px 0">📍 ${this.esc(se.nom)} ${this.nodeBtns('sectors',se.id)}</div>
+                        ${hs.map(h => `<div style="margin-left:14px;font-size:12px;color:var(--muted)">🏠 ${this.esc(h.nom)} ${this.nodeBtns('houses',h.id)}</div>`).join('')}
+                      </div>`;
+                  }).join('')}
+                </div>`;
+            }).join('')}
+          </div>`;
+      }).join('');
+    }
+    document.getElementById('main').innerHTML = html;
+  },
+
+  openZoneForm() {
+    this.openModal('Nouvelle Zone', `
+      <div class="form-group"><label class="form-required">Nom de la zone</label><input id="zName"></div>
+      <button class="btn full" onclick="App.saveZone()">Enregistrer</button>
+    `);
+  },
+  async saveZone() {
+    const nom = document.getElementById('zName').value.trim();
+    if (!nom) return this.toast('Nom requis');
+    await dbPut('zones', { id:uid(), nom, date:new Date().toISOString() });
+    await this.log('create','Zone: '+nom);
+    this.closeModal(); this.toast('Zone créée'); this.nav('structure');
+  },
+
+  async openSubForm() {
+    const zones = await dbAll('zones');
+    if (!zones.length) return this.toast('Créez d\'abord une zone');
+    this.openModal('Nouveau Sous-centre', `
+      <div class="form-group"><label class="form-required">Zone</label>
+        <select id="scZone">${zones.map(z=>`<option value="${z.id}">${this.esc(z.nom)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-required">Nom</label><input id="scName"></div>
+      <button class="btn full" onclick="App.saveSub()">Enregistrer</button>
+    `);
+  },
+  async saveSub() {
+    const nom = document.getElementById('scName').value.trim();
+    const zoneId = document.getElementById('scZone').value;
+    if (!nom) return this.toast('Nom requis');
+    await dbPut('subcenters', { id:uid(), nom, zoneId, date:new Date().toISOString() });
+    this.closeModal(); this.toast('Sous-centre créé'); this.nav('structure');
+  },
+
+  async openSectForm() {
+    const subs = await dbAll('subcenters');
+    if (!subs.length) return this.toast('Créez d\'abord un sous-centre');
+    this.openModal('Nouveau Secteur', `
+      <div class="form-group"><label class="form-required">Sous-centre</label>
+        <select id="sSub">${subs.map(s=>`<option value="${s.id}">${this.esc(s.nom)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-required">Nom</label><input id="sName"></div>
+      <button class="btn full" onclick="App.saveSect()">Enregistrer</button>
+    `);
+  },
+  async saveSect() {
+    const nom = document.getElementById('sName').value.trim();
+    const subId = document.getElementById('sSub').value;
+    if (!nom) return this.toast('Nom requis');
+    await dbPut('sectors', { id:uid(), nom, subId, date:new Date().toISOString() });
+    this.closeModal(); this.toast('Secteur créé'); this.nav('structure');
+  },
+
+  async openHouseForm() {
+    const sects = await dbAll('sectors');
+    if (!sects.length) return this.toast('Créez d\'abord un secteur');
+    this.openModal('Nouvelle Assemblée de maison', `
+      <div class="form-group"><label class="form-required">Secteur</label>
+        <select id="hSect">${sects.map(s=>`<option value="${s.id}">${this.esc(s.nom)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-required">Nom</label><input id="hName"></div>
+      <button class="btn full" onclick="App.saveHouse()">Enregistrer</button>
+    `);
+  },
+  async saveHouse() {
+    const nom = document.getElementById('hName').value.trim();
+    const sectId = document.getElementById('hSect').value;
+    if (!nom) return this.toast('Nom requis');
+    await dbPut('houses', { id:uid(), nom, sectId, date:new Date().toISOString() });
+    this.closeModal(); this.toast('Assemblée créée'); this.nav('structure');
+  },
+
+  /* ============ ÉVANGÉLISTES ============ */
+  async renderEvangelists() {
+    const evs = await dbAll('evangelists');
+    document.getElementById('main').innerHTML = `
+      <div class="search-bar">
+        <input id="evSearch" placeholder="🔍 Rechercher…" oninput="App.filterList('evSearch','evList')">
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="App.openEvangelistForm()">+ Nouvel évangéliste</button>
+      </div>
+      <div id="evList">
+        ${evs.length === 0
+          ? '<div class="empty"><div class="icon">👤</div><div class="msg">Aucun évangéliste</div></div>'
+          : evs.map(e => `
+              <div class="list-item" data-name="${(e.nom+' '+(e.prenom||'')).toLowerCase()}"
+                   onclick="App.openEvangelistDetail('${e.id}')">
+                <div class="soul-avatar" style="${e.photo ? `background-image:url('${e.photo}')` : ''}">
+                  ${e.photo ? '' : ((e.nom||'?').charAt(0) + (e.prenom||'').charAt(0)).toUpperCase()}
+                </div>
+                <div class="info">
+                  <div class="name">${this.esc(e.nom)} ${this.esc(e.prenom||'')}</div>
+                  <div class="meta">${e.sexe||'—'} · ${this.esc(e.niveau||'Niveau?')} · ${this.esc(e.statut||'actif')}</div>
+                </div>
+                <div class="chev">›</div>
+              </div>
+            `).join('')}
+      </div>
+    `;
+  },
+
+  filterList(inputId, listId) {
+    const q = document.getElementById(inputId).value.toLowerCase();
+    document.querySelectorAll('#'+listId+' .list-item').forEach(el => {
+      el.style.display = (el.dataset.name||'').includes(q) ? 'flex' : 'none';
+    });
+  },
+
+  async openEvangelistForm(id) {
+    const ev = id ? await dbGet('evangelists', id) : null;
+    const zonesL = await dbAll('zones');
+    this.openModal(ev ? 'Modifier l\'évangéliste' : 'Nouvel Évangéliste', `
+      <div class="photo-upload">
+        <div class="photo-preview" id="evPhotoPreview">📷</div>
+        <div class="photo-actions">
+          <label for="evPhotoInput">Choisir une photo</label>
+          <input type="file" id="evPhotoInput" accept="image/*" onchange="App.pickPhoto('evPhotoInput','evPhotoPreview')">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-required">Nom</label><input id="evNom"></div>
+        <div class="form-group"><label>Prénom</label><input id="evPrenom"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Sexe</label>
+          <select id="evSexe"><option value="">—</option><option>M</option><option>F</option></select></div>
+        <div class="form-group"><label>Date de naissance</label><input type="date" id="evDdn"></div>
+      </div>
+      <div class="form-group"><label>Téléphone</label><input type="tel" id="evTel"></div>
+      <div class="form-group"><label>Zone d'affectation</label><select id="evZone"><option value="">—</option>${zonesL.map(z=>`<option value="${z.id}">${this.esc(z.nom)}</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Niveau d'affectation</label>
+          <select id="evNiveau"><option>Zone</option><option>Sous-centre</option><option>Secteur</option></select></div>
+        <div class="form-group"><label>Date d'entrée</label><input type="date" id="evEntree"></div>
+      </div>
+      <button class="btn full" onclick="App.saveEvangelist()">Enregistrer</button>
+    `);
+    App._photo = null; App._editEv = null;
+    if (ev) {
+      App._editEv = ev.id; App._photo = ev.photo || null;
+      const set = (k, v) => { document.getElementById(k).value = v || ''; };
+      set('evNom', ev.nom); set('evPrenom', ev.prenom); set('evSexe', ev.sexe); set('evDdn', ev.ddn);
+      set('evTel', ev.tel); set('evZone', ev.zoneId); set('evNiveau', ev.niveau); set('evEntree', ev.entree);
+      if (ev.photo) document.getElementById('evPhotoPreview').innerHTML = '<img src="' + ev.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    }
+  },
+  async saveEvangelist() {
+    const nom = document.getElementById('evNom').value.trim();
+    if (!nom) return this.toast('Nom requis');
+    const old = App._editEv ? await dbGet('evangelists', App._editEv) : null;
+    await dbPut('evangelists', {
+      ...(old || {}), id: old ? old.id : uid(), nom, zoneId: document.getElementById('evZone').value,
+      prenom: document.getElementById('evPrenom').value.trim(),
+      sexe: document.getElementById('evSexe').value,
+      ddn: document.getElementById('evDdn').value,
+      tel: document.getElementById('evTel').value.trim(),
+      niveau: document.getElementById('evNiveau').value,
+      entree: document.getElementById('evEntree').value,
+      photo: App._photo || null,
+      statut: old ? old.statut : 'actif',
+      createdAt: old ? old.createdAt : new Date().toISOString()
+    });
+    App._photo = null; App._editEv = null;
+    await this.log(old ? 'update' : 'create','Évangéliste: '+nom);
+    this.closeModal(); this.toast(old ? 'Évangéliste modifié' : 'Évangéliste créé'); this.nav('evangelists');
+  },
+
+  async openEvangelistDetail(id) {
+    const e = await dbGet('evangelists', id);
+    if (!e) return;
+    const souls = (await dbAll('souls')).filter(s => s.evangelisteId === id);
+
+    const barData = [
+      { label:'Enregistrées', value: souls.length, color:'#1a5490' },
+      { label:'Baptisées', value: souls.filter(s=>s.parcours?.bapteme).length, color:'#e8a020' },
+      { label:'Intégrées', value: souls.filter(s=>s.parcours?.integration).length, color:'#10b981' },
+      { label:'Perdues', value: souls.filter(s=>s.statut==='perdu').length, color:'#ef4444' }
+    ];
+
+    this.openModal('Fiche Évangéliste', `
+      <div class="detail-head">
+        <div class="avatar" style="${e.photo ? `background-image:url('${e.photo}')` : ''}">
+          ${e.photo ? '' : ((e.nom||'?').charAt(0) + (e.prenom||'').charAt(0)).toUpperCase()}
+        </div>
+        <div class="content">
+          <h2>${this.esc(e.nom)} ${this.esc(e.prenom||'')}</h2>
+          <div class="meta">
+            ${e.sexe ? e.sexe + ' · ' : ''}${this.esc(e.niveau||'—')}
+            ${e.tel ? '<br>📞 ' + this.esc(e.tel) : ''}
+            ${e.entree ? '<br>Entrée : ' + fmtDate(e.entree) : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <h4>📊 Statistiques individuelles</h4>
+        ${this.renderBarChart(barData, Math.max(...barData.map(b=>b.value), 1))}
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" onclick="App.openEvangelistForm('${id}')">✏️ Modifier</button> <button class="btn danger" onclick="App.deleteEvangelist('${id}')">🗑️ Supprimer</button>
+      </div>
+    `);
+  },
+  async deleteEvangelist(id) {
+    if (!confirm('Supprimer cet évangéliste ?')) return;
+    await dbDel('evangelists', id);
+    this.closeModal(); this.toast('Supprimé'); this.nav('evangelists');
+  },
+
+  /* ============ PHOTOS ============ */
+  pickPhoto(inputId, previewId) {
+    const file = document.getElementById(inputId).files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 300;
+        let w = img.width, h = img.height;
+        if (w > h && w > max) { h = h * max / w; w = max; }
+        else if (h > max) { w = w * max / h; h = max; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        App._photo = dataUrl;
+        const prev = document.getElementById(previewId);
+        prev.style.backgroundImage = `url('${dataUrl}')`;
+        prev.textContent = '';
+        prev.innerHTML = '';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  },
+
+  /* ============ ÂMES ============ */
+  async renderSouls() {
+    const souls = await dbAll('souls');
+    document.getElementById('main').innerHTML = `
+      <div class="search-bar">
+        <input id="soulSearch" placeholder="🔍 Rechercher une âme…" oninput="App.filterList('soulSearch','soulList')">
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="App.openSoulForm()">+ Nouvelle âme</button>
+        <button class="btn secondary" onclick="App.nav('stats')">📈 Stats</button>
+      </div>
+      <div id="soulList">
+        ${souls.length === 0
+          ? '<div class="empty"><div class="icon">🕊️</div><div class="msg">Aucune âme enregistrée</div></div>'
+          : souls.slice().reverse().map(s => `
+              <div class="list-item" data-name="${(s.nom+' '+(s.prenoms||'')).toLowerCase()}"
+                   onclick="App.openSoulDetail('${s.id}')">
+                <div class="soul-avatar" style="${s.photo ? `background-image:url('${s.photo}')` : ''}">
+                  ${s.photo ? '' : this.initials(s)}
+                </div>
+                <div class="info">
+                  <div class="name">${this.esc(s.nom)} ${this.esc(s.prenoms||'')}</div>
+                  <div class="meta">${this.esc(s.tel||'Sans contact')} · ${this.soulStatusLabel(s)}</div>
+                </div>
+                <div class="chev">›</div>
+              </div>
+            `).join('')}
+      </div>
+    `;
+  },
+
+  soulStatusLabel(s) {
+    const p = s.parcours || {};
+    if (s.statut === 'perdu') return '<span class="tag red">Perdu</span>';
+    if (p.integration) return '<span class="tag green">Intégrée</span>';
+    if (p.brisement) return '<span class="tag purple">Brisement</span>';
+    if (p.bapteme) return '<span class="tag blue">Baptisée</span>';
+    if (p.repentance) return '<span class="tag orange">Repentie</span>';
+    return '<span class="tag gray">Nouvelle</span>';
+  },
+
+  openSoulForm() {
+    this.openModal('Nouvelle Âme', `
+      <div class="photo-upload">
+        <div class="photo-preview" id="sPhotoPreview">📷</div>
+        <div class="photo-actions">
+          <label for="sPhotoInput">Choisir une photo</label>
+          <input type="file" id="sPhotoInput" accept="image/*" onchange="App.pickPhoto('sPhotoInput','sPhotoPreview')">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-required">Nom</label><input id="sNom"></div>
+        <div class="form-group"><label>Prénom(s)</label><input id="sPrenoms"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Sexe</label>
+          <select id="sSexe"><option value="">—</option><option>M</option><option>F</option></select></div>
+        <div class="form-group"><label>Date de naissance</label><input type="date" id="sDdn"></div>
+      </div>
+      <div class="form-group"><label>Lieu d'habitation</label><input id="sHabitat"></div>
+      <div class="form-group"><label>Téléphone</label><input type="tel" id="sTel"></div>
+      <div class="form-group"><label class="form-required">Date de conduite à Christ</label>
+        <input type="date" id="sConduite" value="${todayISO()}"></div>
+      <button class="btn full" onclick="App.saveSoul()">Enregistrer</button>
+    `);
+    App._photo = null;
+  },
+  async saveSoul() {
+    const nom = document.getElementById('sNom').value.trim();
+    const conduite = document.getElementById('sConduite').value;
+    if (!nom) return this.toast('Nom requis');
+    if (!conduite) return this.toast('Date de conduite requise');
+
+    const soul = {
+      id: uid(), nom,
+      prenoms: document.getElementById('sPrenoms').value.trim(),
+      sexe: document.getElementById('sSexe').value,
+      ddn: document.getElementById('sDdn').value,
+      habitat: document.getElementById('sHabitat').value.trim(),
+      tel: document.getElementById('sTel').value.trim(),
+      photo: App._photo || null,
+      conduiteDate: conduite,
+      statut: 'en_cours',
+      evangelisteId: currentUser.role === 'evangeliste' ? currentUser.id : null,
+      parcours: {
+        conduite: { date: conduite, evangelisteId: currentUser.name },
+        repentance: null, bapteme: null, premiereAdoration: null,
+        brisement: null, integration: null
+      },
+      suivi: { debut: conduite, mois: [] },
+      createdAt: new Date().toISOString(),
+      history: [{ date: new Date().toISOString(), action: 'Création par ' + currentUser.name }]
+    };
+    App._photo = null;
+    await dbPut('souls', soul);
+    await this.log('create','Âme: '+nom);
+    this.closeModal(); this.toast('Âme enregistrée'); this.nav('souls');
+  },
+
+  async openSoulDetail(id) {
+    const soul = await dbGet('souls', id);
+    if (!soul) return this.toast('Introuvable');
+    const p = soul.parcours || {};
+    const steps = [
+      { key:'conduite', label:'Conduite à Christ', icon:'✝️' },
+      { key:'repentance', label:'Repentance', icon:'🙏' },
+      { key:'bapteme', label:'Baptême', icon:'💧' },
+      { key:'premiereAdoration', label:'Première adoration', icon:'⛪' },
+      { key:'brisement', label:'Brisement de liens', icon:'⛓️' },
+      { key:'integration', label:'Intégration', icon:'🏠' }
+    ];
+
+    const mois = soul.suivi?.mois || [];
+    const monthCells = Array.from({length:12}, (_,i) => {
+      const m = mois[i];
+      const done = m && m.date;
+      const isCurrent = i === mois.filter(x=>x).length;
+      return `<div class="month-cell ${done?'done':''} ${isCurrent?'current':''}"
+                   onclick="App.openMonthForm('${id}',${i})">
+                M${i+1}${done?'<small>✓</small>':''}
+              </div>`;
+    }).join('');
+
+    this.openModal('Fiche Âme', `
+      <div class="detail-head">
+        <div class="avatar" style="${soul.photo ? `background-image:url('${soul.photo}')` : ''}">
+          ${soul.photo ? '' : this.initials(soul)}
+        </div>
+        <div class="content">
+          <h2>${this.esc(soul.nom)} ${this.esc(soul.prenoms||'')}</h2>
+          <div class="meta">
+            ${soul.sexe ? soul.sexe : ''}${soul.habitat ? ' · 🏠 ' + this.esc(soul.habitat) : ''}
+            ${soul.tel ? '<br>📞 ' + this.esc(soul.tel) : ''}
+            ${soul.conduiteDate ? '<br>Conduite : ' + fmtDate(soul.conduiteDate) : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>✝️ Parcours spirituel</h3>
+        <div class="checklist">
+          ${steps.map(st => {
+            const done = !!p[st.key];
+            const d = done && p[st.key].date ? fmtDate(p[st.key].date) : '';
+            const extra = done && p[st.key].responsable ? ' · '+this.esc(p[st.key].responsable) : '';
+            return `
+              <div class="check-item ${done?'done':''}" onclick="App.toggleStep('${id}','${st.key}')">
+                <div class="circle">${done?'✓':''}</div>
+                <div class="text">${st.icon} ${st.label}${d?'<div class="date">'+d+extra+'</div>':''}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📅 Suivi 12 mois</h3>
+        <div class="month-grid">${monthCells}</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" onclick="App.changePhoto('${id}')">📷 Photo</button>
+        <button class="btn warning" onclick="App.markLost('${id}')">⚠️ Perdu</button>
+        <button class="btn danger" onclick="App.deleteSoul('${id}')">🗑️</button>
+      </div>
+
+      <div class="card">
+        <h3>📜 Historique</h3>
+        ${(soul.history||[]).slice().reverse().slice(0,10).map(h => `
+          <div class="history-item">
+            <b>${new Date(h.date).toLocaleString('fr-FR')}</b>
+            <span>${this.esc(h.action)}</span>
+          </div>`).join('') || '<div style="font-size:12px;color:var(--muted)">Aucun historique</div>'}
+      </div>
+    `);
+  },
+
+  changePhoto(soulId) {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.onchange = async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = async () => {
+          const max = 300;
+          let w = img.width, h = img.height;
+          if (w > h && w > max) { h = h * max / w; w = max; }
+          else if (h > max) { w = w * max / h; h = max; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+          const soul = await dbGet('souls', soulId);
+          soul.photo = dataUrl;
+          await dbPut('souls', soul);
+          this.toast('Photo mise à jour');
+          this.openSoulDetail(soulId);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  },
+
+  async toggleStep(soulId, stepKey) {
+    const soul = await dbGet('souls', soulId);
+    if (!soul) return;
+    soul.parcours = soul.parcours || {};
+    if (soul.parcours[stepKey]) {
+      if (!confirm('Décocher cette étape ?')) return;
+      soul.parcours[stepKey] = null;
+    } else {
+      const date = prompt('Date (AAAA-MM-JJ) :', todayISO());
+      if (!date) return;
+      let extra = '';
+      if (stepKey === 'brisement') extra = prompt('Responsable du brisement :','') || '';
+      soul.parcours[stepKey] = { date, responsable: extra };
+    }
+    soul.history = soul.history || [];
+    soul.history.push({ date: new Date().toISOString(), action: 'Étape : '+stepKey+' — '+currentUser.name });
+    await dbPut('souls', soul);
+    await this.log('update','Étape '+stepKey+' pour '+soul.nom);
+    this.toast('Parcours mis à jour');
+    this.openSoulDetail(soulId);
+  },
+
+  async openMonthForm(soulId, index) {
+    const soul = await dbGet('souls', soulId);
+    const m = (soul.suivi?.mois || [])[index] || {};
+    this.openModal(`Suivi — Mois ${index+1}`, `
+      <div class="form-group"><label>Date du suivi</label>
+        <input type="date" id="mDate" value="${m.date || todayISO()}"></div>
+      <div class="form-group"><label>Présence</label>
+        <select id="mPresence">
+          <option value="present" ${m.presence==='present'?'selected':''}>Présent(e)</option>
+          <option value="absent" ${m.presence==='absent'?'selected':''}>Absent(e)</option>
+          <option value="excuse" ${m.presence==='excuse'?'selected':''}>Excusé(e)</option>
+        </select></div>
+      <div class="form-group"><label>État spirituel</label>
+        <select id="mEtat">
+          <option value="croissance" ${m.etat==='croissance'?'selected':''}>En croissance</option>
+          <option value="stable" ${m.etat==='stable'?'selected':''}>Stable</option>
+          <option value="difficulte" ${m.etat==='difficulte'?'selected':''}>En difficulté</option>
+        </select></div>
+      <div class="form-group"><label>Notes</label><textarea id="mNotes">${this.esc(m.notes||'')}</textarea></div>
+      <div class="form-group"><label>Actions prévues</label><textarea id="mActions">${this.esc(m.actions||'')}</textarea></div>
+      <button class="btn full" onclick="App.saveMonth('${soulId}',${index})">Enregistrer</button>
+    `);
+  },
+  async saveMonth(soulId, index) {
+    const soul = await dbGet('souls', soulId);
+    soul.suivi = soul.suivi || { mois: [] };
+    while (soul.suivi.mois.length <= index) soul.suivi.mois.push(null);
+    soul.suivi.mois[index] = {
+      date: document.getElementById('mDate').value,
+      presence: document.getElementById('mPresence').value,
+      etat: document.getElementById('mEtat').value,
+      notes: document.getElementById('mNotes').value,
+      actions: document.getElementById('mActions').value
+    };
+    soul.history = soul.history || [];
+    soul.history.push({ date: new Date().toISOString(), action: 'Suivi mois '+(index+1)+' — '+currentUser.name });
+    await dbPut('souls', soul);
+    this.closeModal(); this.toast('Suivi enregistré');
+    this.openSoulDetail(soulId);
+  },
+
+  async markLost(id) {
+    if (!confirm('Marquer perdue de vue ?')) return;
+    const soul = await dbGet('souls', id);
+    soul.statut = 'perdu';
+    soul.history = soul.history || [];
+    soul.history.push({ date:new Date().toISOString(), action:'Marquée perdue — '+currentUser.name });
+    await dbPut('souls', soul);
+    this.toast('Marquée perdue');
+    this.openSoulDetail(id);
+  },
+
+  async deleteSoul(id) {
+    if (!confirm('Supprimer définitivement ?')) return;
+    await dbDel('souls', id);
+    this.closeModal(); this.toast('Supprimée'); this.nav('souls');
+  },
+
+  /* ============ STATISTIQUES ============ */
+  async renderStats() {
+    const souls = await dbAll('souls');
+    const total = souls.length;
+    const steps = [
+      { key:'conduite', label:'Conduite' },
+      { key:'repentance', label:'Repentance' },
+      { key:'bapteme', label:'Baptême' },
+      { key:'premiereAdoration', label:'1ère adoration' },
+      { key:'brisement', label:'Brisement' },
+      { key:'integration', label:'Intégration' }
+    ];
+    const counts = {};
+    steps.forEach(s => counts[s.key] = souls.filter(x => x.parcours?.[s.key]).length);
+
+    const moisDone = souls.reduce((a,s) => a + ((s.suivi?.mois||[]).filter(m => m && m.date).length), 0);
+    const moisAttendu = total * 12;
+
+    const funnelData = steps.map(s => ({
+      label: s.label,
+      value: counts[s.key],
+      color: 'linear-gradient(90deg,var(--primary),var(--accent))'
+    }));
+
+    document.getElementById('main').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-box"><div class="num">${total}</div><div class="lbl">Total âmes</div></div>
+        <div class="stat-box success"><div class="num">${counts.integration}</div><div class="lbl">Intégrées</div></div>
+        <div class="stat-box accent"><div class="num">${total ? Math.round(counts.integration/total*100) : 0}%</div><div class="lbl">Taux intégration</div></div>
+        <div class="stat-box warning"><div class="num">${souls.filter(s=>s.statut==='en_cours').length}</div><div class="lbl">En cours</div></div>
+        <div class="stat-box danger"><div class="num">${souls.filter(s=>s.statut==='perdu').length}</div><div class="lbl">Perdues</div></div>
+        <div class="stat-box"><div class="num">${total ? Math.round(moisDone/moisAttendu*100) : 0}%</div><div class="lbl">Suivi mensuel</div></div>
+      </div>
+
+      <div class="chart-wrap">
+        <h4>🔄 Entonnoir du parcours spirituel</h4>
+        ${this.renderBarChart(funnelData, total)}
+      </div>
+
+      <div class="chart-wrap">
+        <h4>📊 Répartition par statut</h4>
+        ${this.renderDonutChart([
+          { label:'Intégrées', value: souls.filter(s=>s.parcours?.integration).length, color:'#10b981' },
+          { label:'Baptisées', value: souls.filter(s=>s.parcours?.bapteme && !s.parcours?.integration).length, color:'#1a5490' },
+          { label:'En cours', value: souls.filter(s=>s.parcours?.repentance && !s.parcours?.bapteme).length, color:'#f59e0b' },
+          { label:'Nouvelles', value: souls.filter(s=>!s.parcours?.repentance && s.statut!=='perdu').length, color:'#94a3b8' },
+          { label:'Perdues', value: souls.filter(s=>s.statut==='perdu').length, color:'#ef4444' }
+        ], total, 'ÂMES')}
+      </div>
+
+      <div class="chart-wrap">
+        <h4>📈 Suivis mensuels par mois</h4>
+        ${this.renderMonthlyChart(souls)}
+      </div>
+
+      <div class="chart-wrap">
+        <h4>👥 Âmes par évangéliste</h4>
+        ${await this.renderEvangelistsChart(souls)}
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="App.exportJSON()">📤 Export JSON</button>
+        <button class="btn secondary" onclick="App.exportCSV()">📊 Export CSV</button>
+      </div>
+    `;
+  },
+
+  async renderEvangelistsChart(souls) {
+    const evs = await dbAll('evangelists');
+    if (evs.length === 0) return '<div class="empty" style="padding:20px"><div class="msg">Aucun évangéliste</div></div>';
+
+    const items = evs.map(e => {
+      const count = souls.filter(s => s.evangelisteId === e.id).length;
+      return { label: e.nom + ' ' + (e.prenom||''), value: count, color:'linear-gradient(90deg,var(--primary),var(--accent))' };
+    }).filter(i => i.value > 0).sort((a,b) => b.value - a.value);
+
+    if (items.length === 0) return '<div class="empty" style="padding:20px"><div class="msg">Aucune âme associée</div></div>';
+    return this.renderBarChart(items, Math.max(...items.map(i=>i.value), 1));
+  },
+
+  /* ============ CODE DE DÉPLOIEMENT ============ */
+  async generateDeployCode() {
+    const payload = {
+      v: 1,
+      date: new Date().toISOString(),
+      zones: await dbAll('zones'),
+      subcenters: await dbAll('subcenters'),
+      sectors: await dbAll('sectors'),
+      houses: await dbAll('houses'),
+      users: (await dbAll('users')).map(u => ({
+        id: u.id, name: u.name, code: u.code, role: u.role,
+        scope: u.scope, active: u.active
+      }))
+    };
+    const json = JSON.stringify(payload);
+    const b64 = btoa(unescape(encodeURIComponent(json)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const groups = b64.match(/.{1,12}/g) || [];
+    return 'DEME-' + groups.join('-').toUpperCase();
+  },
+
+  async importDeployCode(code) {
+    const clean = code.trim().toUpperCase()
+      .replace(/^DEME-/, '')
+      .replace(/-/g, '');
+    let b64 = clean.replace(/-/g,'+').replace(/_/g,'/');
+    while (b64.length % 4) b64 += '=';
+    const json = decodeURIComponent(escape(atob(b64)));
+    const data = JSON.parse(json);
+
+    if (!data.zones || !data.users) throw new Error('Code invalide ou corrompu');
+
+    let imported = 0;
+    for (const store of ['zones','subcenters','sectors','houses','users']) {
+      for (const item of (data[store]||[])) {
+        const ex = await dbGet(store, item.id);
+        if (!ex) { await dbPut(store, item); imported++; }
+      }
+    }
+    await this.log('import-deploy', `${imported} éléments depuis code`);
+    return imported;
+  },
+
+  async renderDeployCodePage() {
+    const code = await this.generateDeployCode();
+    const users = await dbAll('users');
+
+    this.openModal('📦 Code de déploiement', `
+      <div class="deploy-box">
+        <div style="font-size:13px;font-weight:700;color:var(--primary);text-transform:uppercase">
+          Code à partager
+        </div>
+        <div class="deploy-code">${code}</div>
+        <button class="btn small" onclick="App.copyDeployCode('${code.replace(/'/g,"\\'")}')" style="margin-top:6px">
+          📋 Copier le code
+        </button>
+      </div>
+
+      <div class="card" style="background:#f0f9ff;border:1px solid #bae6fd">
+        <h3 style="color:var(--primary)">📖 Mode d'emploi</h3>
+        <div style="font-size:13px;line-height:1.7;color:var(--text)">
+          <b>1.</b> Envoyez ce code à chaque utilisateur (WhatsApp, SMS…)<br>
+          <b>2.</b> Sur son téléphone, il ouvre l'application<br>
+          <b>3.</b> Sur l'écran de connexion → bouton <b>"📦 J'ai un code de déploiement"</b><br>
+          <b>4.</b> Il colle le code → sa config + son compte sont importés<br>
+          <b>5.</b> Il se connecte via l'onglet <b>"Utilisateur"</b> avec son nom + code d'accès
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>👥 Comptes inclus (${users.length})</h3>
+        ${users.length === 0
+          ? '<div style="color:var(--muted);font-size:13px">Aucun utilisateur. Créez-en d\'abord dans Paramètres.</div>'
+          : users.map(u => `
+              <div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+                <b>${this.esc(u.name)}</b> — <span style="color:var(--muted)">${ROLES[u.role].short}</span>
+              </div>
+            `).join('')}
+      </div>
+
+      <button class="btn full secondary" onclick="App.closeModal()">Fermer</button>
+    `);
+  },
+
+  copyDeployCode(code) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(() => this.toast('Code copié !'))
+        .catch(() => this._fallbackCopy(code));
+    } else {
+      this._fallbackCopy(code);
+    }
+  },
+  _fallbackCopy(code) {
+    const ta = document.createElement('textarea');
+    ta.value = code; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    this.toast('Code copié !');
+  },
+
+  openImportDeployCode() {
+    this.openModal('📦 J\'ai un code de déploiement', `
+      <div class="deploy-help" style="margin-bottom:12px">
+        Collez le code reçu de la Direction Centrale. Cela va configurer
+        votre application avec la structure DEME et votre compte d'accès.
+      </div>
+      <div class="form-group">
+        <label>Code de déploiement</label>
+        <textarea id="deployInput" placeholder="DEME-XXXX-XXXX-XXXX..."
+          style="min-height:100px;font-family:monospace;font-size:14px"></textarea>
+      </div>
+      <button class="btn full" onclick="App.submitDeployCode()">Valider le code</button>
+      <button class="btn full secondary" onclick="App.closeModal()" style="margin-top:8px">Annuler</button>
+    `);
+    setTimeout(() => {
+      const el = document.getElementById('deployInput');
+      if (el) el.focus();
+    }, 100);
+  },
+
+  async submitDeployCode() {
+    const code = document.getElementById('deployInput').value.trim();
+    if (!code) return this.toast('Collez le code');
+    try {
+      const n = await this.importDeployCode(code);
+      this.closeModal();
+      this.toast(`✅ Configuration importée (${n} éléments). Connectez-vous !`);
+      setTimeout(() => location.reload(), 1500);
+    } catch(e) {
+      this.toast('❌ ' + e.message);
+    }
+  },
+
+  /* ============ TRANSFERT ============ */
+  async renderTransfer() {
+    const supportsFS = 'showSaveFilePicker' in window;
+    document.getElementById('main').innerHTML = `
+      <div class="card">
+        <h3>📤 Exporter les données</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          Génère un fichier contenant toute la structure hiérarchique
+          (zones, sous-centres, secteurs, assemblées, évangélistes, âmes, utilisateurs).
+        </p>
+        ${supportsFS
+          ? `<div class="export-help" style="background:#ecfdf5;border-color:#10b981;color:#065f46">
+              ✅ Sur cet appareil, vous pouvez <b>choisir le dossier de destination</b>.
+            </div>`
+          : `<div class="export-help">
+              ℹ️ Sur cet appareil, le fichier sera téléchargé automatiquement dans votre dossier Téléchargements.
+            </div>`}
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn" onclick="App.exportJSON()">📤 Export JSON complet</button>
+          <button class="btn secondary" onclick="App.exportCSV()">📊 Export CSV (âmes)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📥 Importer des données</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          Sélectionnez un fichier JSON exporté depuis une autre instance DEME.
+          Les doublons (nom + téléphone) sont ignorés.
+        </p>
+        <input type="file" id="importFile" accept=".json" style="margin-bottom:12px;width:100%;padding:8px;border:1.5px solid var(--border);border-radius:10px">
+        <button class="btn full" onclick="App.importJSON()">Importer</button>
+      </div>
+
+      <div class="card">
+        <h3>🗑️ Réinitialiser</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          Efface toutes les données locales. Action irréversible.
+        </p>
+        <button class="btn danger full" onclick="App.resetAll()">Tout effacer</button>
+      </div>
+    `;
+  },
+
+  /* ============ EXPORT AVEC CHOIX DU CHEMIN ============ */
+  async exportJSON() {
+    const data = {
+      version: 3,
+      exportedAt: new Date().toISOString(),
+      zones: await dbAll('zones'),
+      subcenters: await dbAll('subcenters'),
+      sectors: await dbAll('sectors'),
+      houses: await dbAll('houses'),
+      evangelists: await dbAll('evangelists'),
+      souls: await dbAll('souls'),
+      activities: await dbAll('activities'),
+      users: await dbAll('users')
+    };
+    const filename = `deme-export-${todayISO()}.json`;
+    const content = JSON.stringify(data, null, 2);
+    await this.saveFileWithChoice(content, filename, 'application/json');
+    await this.log('export','JSON complet');
+  },
+
+  async exportCSV() {
+    const souls = await dbAll('souls');
+    const H = ['Nom','Prénoms','Sexe','DDN','Habitation','Téléphone','Conduite','Repentance','Baptême','1ère Adoration','Brisement','Intégration','Statut'];
+    const rows = souls.map(s => [
+      s.nom, s.prenoms||'', s.sexe||'', s.ddn||'', s.habitat||'', s.tel||'',
+      s.parcours?.conduite?.date||'',
+      s.parcours?.repentance?.date||'',
+      s.parcours?.bapteme?.date||'',
+      s.parcours?.premiereAdoration?.date||'',
+      s.parcours?.brisement?.date||'',
+      s.parcours?.integration?.date||'',
+      s.statut||''
+    ]);
+    const csv = [H, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const filename = `deme-ames-${todayISO()}.csv`;
+    await this.saveFileWithChoice('\ufeff'+csv, filename, 'text/csv;charset=utf-8');
+  },
+
+  async saveFileWithChoice(content, filename, mimeType) {
+    const supportsFS = 'showSaveFilePicker' in window;
+
+    if (supportsFS) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{
+            description: 'Fichier ' + (mimeType.includes('json') ? 'JSON' : mimeType.includes('csv') ? 'CSV' : ''),
+            accept: { [mimeType.split(';')[0]]: [filename.substring(filename.lastIndexOf('.'))] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        this.toast('✅ Fichier enregistré : ' + handle.name);
+        return true;
+      } catch (e) {
+        if (e.name === 'AbortError') return false;
+        console.warn('File System Access échoué, fallback:', e);
+        this._downloadFallback(content, filename, mimeType);
+        return true;
+      }
+    } else {
+      this._downloadFallback(content, filename, mimeType);
+      return true;
+    }
+  },
+
+  _downloadFallback(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    this.toast('📥 Fichier téléchargé : ' + filename);
+  },
+
+  async importJSON() {
+    const file = document.getElementById('importFile').files[0];
+    if (!file) return this.toast('Sélectionnez un fichier');
+    try {
+      const data = JSON.parse(await file.text());
+      let imp = 0, skip = 0;
+      const existingSouls = await dbAll('souls');
+      const keys = new Set(existingSouls.map(s => (s.nom+'|'+(s.tel||'')).toLowerCase()));
+
+      for (const store of ['zones','subcenters','sectors','houses','evangelists','activities','users']) {
+        for (const item of (data[store]||[])) {
+          const ex = await dbGet(store, item.id);
+          if (!ex) { await dbPut(store, item); imp++; } else skip++;
+        }
+      }
+      for (const s of (data.souls||[])) {
+        const key = (s.nom+'|'+(s.tel||'')).toLowerCase();
+        if (keys.has(key)) { skip++; continue; }
+        const ex = await dbGet('souls', s.id);
+        if (!ex) { await dbPut('souls', s); imp++; keys.add(key); } else skip++;
+      }
+      await this.log('import', `${imp} importés, ${skip} ignorés`);
+      this.toast(`Import : ${imp} éléments, ${skip} ignorés`);
+      this.nav('dashboard');
+    } catch(e) {
+      this.toast('Erreur : '+e.message);
+    }
+  },
+
+  async resetAll() {
+    if (!confirm('Effacer TOUTES les données ?')) return;
+    if (!confirm('Confirmation finale ?')) return;
+    for (const st of ['zones','subcenters','sectors','houses','evangelists','activities','souls','audit','users']) {
+      await dbClear(st);
+    }
+    this.toast('Données effacées');
+    this.nav('dashboard');
+  },
+
+
+  /* ============ STRUCTURE : MODIFIER / SUPPRIMER ============ */
+  nodeBtns(store, id) {
+    return `<span style="float:right;white-space:nowrap"><button class="btn small secondary" style="padding:2px 8px" onclick="App.editNode('${store}','${id}')">✏️</button> <button class="btn small danger" style="padding:2px 8px" onclick="App.deleteNode('${store}','${id}')">🗑️</button></span>`;
+  },
+  async editNode(store, id) {
+    const n = await dbGet(store, id); if (!n) return;
+    const P = { subcenters:['zones','zoneId','Zone'], sectors:['subcenters','subId','Sous-centre'], houses:['sectors','sectId','Secteur'] }[store];
+    let sel = '';
+    if (P) {
+      const arr = await dbAll(P[0]);
+      sel = `<div class="form-group"><label>${P[2]} de rattachement</label><select id="nParent">${arr.map(x => `<option value="${x.id}" ${x.id === n[P[1]] ? 'selected' : ''}>${this.esc(x.nom)}</option>`).join('')}</select></div>`;
+    }
+    this.openModal('Modifier', `<div class="form-group"><label class="form-required">Nom</label><input id="nName" value="${this.esc(n.nom)}"></div>${sel}<button class="btn full" onclick="App.saveNode('${store}','${id}')">Enregistrer</button>`);
+  },
+  async saveNode(store, id) {
+    const n = await dbGet(store, id);
+    const nom = document.getElementById('nName').value.trim();
+    if (!nom) return this.toast('Nom requis');
+    const pf = { subcenters:'zoneId', sectors:'subId', houses:'sectId' }[store];
+    const pe = document.getElementById('nParent');
+    n.nom = nom; if (pf && pe) n[pf] = pe.value;
+    await dbPut(store, n); await this.log('update', store + ': ' + nom);
+    this.closeModal(); this.toast('Modifié'); this.nav('structure');
+  },
+  async deleteNode(store, id) {
+    const n = await dbGet(store, id); if (!n) return;
+    const [subs, sects, houses] = await Promise.all([dbAll('subcenters'), dbAll('sectors'), dbAll('houses')]);
+    const subIds = store === 'zones' ? subs.filter(s => s.zoneId === id).map(s => s.id) : store === 'subcenters' ? [id] : [];
+    const sectIds = (store === 'sectors' ? [id] : []).concat(sects.filter(s => subIds.includes(s.subId)).map(s => s.id));
+    const houseIds = (store === 'houses' ? [id] : []).concat(houses.filter(x => sectIds.includes(x.sectId)).map(x => x.id));
+    const a = store === 'zones' ? subIds.length : 0;
+    const b = sectIds.length - (store === 'sectors' ? 1 : 0);
+    const c = houseIds.length - (store === 'houses' ? 1 : 0);
+    let msg = 'Supprimer « ' + n.nom + ' » ?';
+    if (a || b || c) msg += '\nSeront aussi supprimés : ' + a + ' sous-centre(s), ' + b + ' secteur(s), ' + c + ' assemblée(s).';
+    msg += '\nLes activités et âmes déjà saisies sont conservées.';
+    if (!confirm(msg)) return;
+    for (const x of houseIds) await dbDel('houses', x);
+    for (const x of sectIds) await dbDel('sectors', x);
+    for (const x of subIds) await dbDel('subcenters', x);
+    if (store === 'zones') await dbDel('zones', id);
+    await this.log('delete', store + ': ' + n.nom);
+    this.toast('Supprimé'); this.nav('structure');
+  },
+  openZonesBulk() {
+    this.openModal('Ajouter plusieurs zones', `<div class="form-group"><label>Une zone par ligne</label><textarea id="zBulk" rows="8" style="width:100%"></textarea></div><button class="btn full" onclick="App.saveZonesBulk()">Enregistrer</button>`);
+  },
+  async saveZonesBulk() {
+    const lines = document.getElementById('zBulk').value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (!lines.length) return this.toast('Aucune zone saisie');
+    const have = new Set((await dbAll('zones')).map(z => z.nom.toLowerCase()));
+    let n = 0;
+    for (const nom of lines) {
+      if (have.has(nom.toLowerCase())) continue;
+      have.add(nom.toLowerCase());
+      await dbPut('zones', { id: uid(), nom, date: new Date().toISOString() }); n++;
+    }
+    await this.log('create', n + ' zones (saisie multiple)');
+    this.closeModal(); this.toast(n + ' zone(s) créée(s)'); this.nav('structure');
+  },
+
+  /* ============ ACTIVITÉS DES ÉVANGÉLISTES ============ */
+  ACT_TYPES: {
+    traites:{ label:'Traités distribués', icon:'📜', short:'Traités' },
+    evangeliste_forme:{ label:'Évangélistes formés', icon:'🎓', short:'Formés' },
+    ame:{ label:'Croyants gagnés', icon:'🕊️', short:'Âmes' },
+    bapteme:{ label:'Baptêmes', icon:'💧', short:'Baptêmes' },
+    caravane:{ label:'Caravanes d\'évangélisation', icon:'🚐', short:'Caravanes' },
+    eglise:{ label:'Églises de maison (Jéricho)', icon:'🏠', short:'Églises' }
+  },
+  OBJ_DEFAULT: {
+    traites:{ g:10000000, a:2500000 }, evangeliste_forme:{ g:200, a:50 }, ame:{ g:2000000, a:null },
+    bapteme:{ g:1000, a:null }, caravane:{ g:1000, a:100 }, eglise:{ g:400, a:100 }
+  },
+  fmtN(n) { return (n || 0).toLocaleString('fr-FR'); },
+  isoD(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); },
+  fmtD(s) { if (!s) return '—'; const p = s.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; },
+  pct(v, g) { return g ? Math.round(v / g * 1000) / 10 : 0; },
+  async getObjectives() {
+    const r = await dbGet('config', 'objectives');
+    return r ? r.value : JSON.parse(JSON.stringify(this.OBJ_DEFAULT));
+  },
+  async activityItems() {
+    const [acts, souls] = await Promise.all([dbAll('activities'), dbAll('souls')]);
+    const items = acts.map(a => ({ type:a.type, date:a.date, qty:+a.qty || 0, zoneId:a.zoneId || '', evId:a.evId || '' }));
+    souls.forEach(s => {
+      if (s.conduiteDate) items.push({ type:'ame', date:s.conduiteDate, qty:1, zoneId:'', evId:s.evangelisteId || '' });
+      const b = s.parcours && s.parcours.bapteme;
+      if (b) items.push({ type:'bapteme', date:(b.date || s.conduiteDate || ''), qty:1, zoneId:'', evId:s.evangelisteId || '' });
+    });
+    return { acts, items };
+  },
+  sumItems(items, type, from, to) {
+    return items.filter(i => i.type === type && (!from || i.date >= from) && (!to || i.date <= to)).reduce((t, i) => t + i.qty, 0);
+  },
+
+  async renderActivities() {
+    const [{ acts, items }, zones, evs, obj] = await Promise.all([this.activityItems(), dbAll('zones'), dbAll('evangelists'), this.getObjectives()]);
+    const year = String(new Date().getFullYear());
+    const types = Object.keys(this.ACT_TYPES);
+    const bar = (p, c) => `<div style="height:8px;background:var(--border);border-radius:6px;overflow:hidden;margin:4px 0"><div style="height:100%;width:${Math.min(100, p)}%;background:${c}"></div></div>`;
+    const axes = types.map(t => {
+      const T = this.ACT_TYPES[t], o = obj[t] || {};
+      const tot = this.sumItems(items, t), yr = this.sumItems(items, t, year + '-01-01', year + '-12-31');
+      const pg = this.pct(tot, o.g), pa = this.pct(yr, o.a);
+      return `<div class="card"><div style="font-weight:700">${T.icon} ${T.label}</div>
+        <div style="font-size:13px;color:var(--muted)">Cumul : <b>${this.fmtN(tot)}</b> / ${o.g ? this.fmtN(o.g) + ' (' + pg + ' %)' : '—'}</div>${o.g ? bar(pg, 'var(--primary)') : ''}
+        <div style="font-size:13px;color:var(--muted)">Année ${year} : <b>${this.fmtN(yr)}</b> / ${o.a ? this.fmtN(o.a) + ' (' + pa + ' %)' : '—'}</div>${o.a ? bar(pa, 'var(--accent)') : ''}</div>`;
+    }).join('');
+    const tbl = (title, rows) => rows.length ? `<div class="card"><h3>${title}</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><tr><th style="text-align:left;padding:4px">&nbsp;</th>${types.map(t => `<th style="padding:4px">${this.ACT_TYPES[t].icon}</th>`).join('')}</tr>${rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:5px 4px;font-weight:600">${this.esc(r.name)}</td>${types.map(t => `<td style="text-align:right;padding:5px 4px">${this.fmtN(this.sumItems(r.items, t))}</td>`).join('')}</tr>`).join('')}</table></div></div>` : '';
+    const zoneIds = zones.map(z => z.id);
+    const zRows = zones.map(z => ({ name:z.nom, items:items.filter(i => i.zoneId === z.id) }));
+    const rest = items.filter(i => !zoneIds.includes(i.zoneId));
+    if (rest.length) zRows.push({ name:'Non affecté', items:rest });
+    const eRows = evs.map(e => ({ name:(e.nom + ' ' + (e.prenom || '')).trim(), items:items.filter(i => i.evId === e.id) }))
+      .filter(r => r.items.length).sort((a, b) => b.items.reduce((t, i) => t + i.qty, 0) - a.items.reduce((t, i) => t + i.qty, 0));
+    const zn = id => (zones.find(z => z.id === id) || {}).nom || '—';
+    const en = id => { const e = evs.find(x => x.id === id); return e ? (e.nom + ' ' + (e.prenom || '')).trim() : '—'; };
+    const recent = acts.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 30).map(a => {
+      const T = this.ACT_TYPES[a.type] || { icon:'•', short:a.type };
+      return `<div style="padding:8px 0;border-top:1px solid var(--border);font-size:13px">
+        <span style="float:right;white-space:nowrap"><button class="btn small secondary" style="padding:2px 8px" onclick="App.openActForm('${a.id}')">✏️</button> <button class="btn small danger" style="padding:2px 8px" onclick="App.deleteAct('${a.id}')">🗑️</button></span>
+        ${T.icon} <b>${this.fmtN(+a.qty)}</b> ${T.short} · ${this.fmtD(a.date)}<br><span style="color:var(--muted)">${this.esc(zn(a.zoneId))} · ${this.esc(en(a.evId))}${a.note ? ' · ' + this.esc(a.note) : ''}</span></div>`;
+    }).join('');
+    document.getElementById('main').innerHTML = `
+      <div class="btn-row">
+        <button class="btn" onclick="App.openActForm()">+ Activité</button>
+        <button class="btn secondary" onclick="App.openWeekly()">📲 Résumé WhatsApp</button>
+        <button class="btn secondary" onclick="App.openObjectives()">🎯 Objectifs</button>
+      </div>
+      ${axes}
+      ${tbl('Par zone', zRows)}
+      ${tbl('Par évangéliste', eRows)}
+      <div class="card"><h3>Dernières activités saisies</h3>${recent || '<div class="empty"><div class="msg">Aucune activité saisie</div></div>'}</div>`;
+  },
+
+  async openActForm(id) {
+    const [zones, evs] = await Promise.all([dbAll('zones'), dbAll('evangelists')]);
+    const a = id ? await dbGet('activities', id) : {};
+    App._editAct = id || null;
+    const opt = (arr, sel, f) => arr.map(x => `<option value="${x.id}" ${x.id === sel ? 'selected' : ''}>${this.esc(f(x))}</option>`).join('');
+    this.openModal(id ? 'Modifier l\'activité' : 'Nouvelle activité', `
+      <div class="form-group"><label class="form-required">Type</label><select id="aType">${Object.entries(this.ACT_TYPES).map(([k, t]) => `<option value="${k}" ${k === a.type ? 'selected' : ''}>${t.icon} ${t.label}</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-required">Date</label><input type="date" id="aDate" value="${a.date || this.isoD(new Date())}"></div>
+        <div class="form-group"><label class="form-required">Quantité</label><input type="number" min="1" id="aQty" value="${a.qty || ''}"></div>
+      </div>
+      <div class="form-group"><label>Zone</label><select id="aZone"><option value="">—</option>${opt(zones, a.zoneId, z => z.nom)}</select></div>
+      <div class="form-group"><label>Évangéliste</label><select id="aEv"><option value="">—</option>${opt(evs, a.evId, e => (e.nom + ' ' + (e.prenom || '')).trim())}</select></div>
+      <div class="form-group"><label>Note</label><input id="aNote" value="${this.esc(a.note || '')}"></div>
+      <button class="btn full" onclick="App.saveAct()">Enregistrer</button>`);
+  },
+  async saveAct() {
+    const qty = parseInt(document.getElementById('aQty').value, 10);
+    const date = document.getElementById('aDate').value;
+    if (!date) return this.toast('Date requise');
+    if (!qty || qty < 1) return this.toast('Quantité requise');
+    const old = App._editAct ? await dbGet('activities', App._editAct) : null;
+    await dbPut('activities', {
+      ...(old || {}), id: old ? old.id : uid(), type: document.getElementById('aType').value, date, qty,
+      zoneId: document.getElementById('aZone').value, evId: document.getElementById('aEv').value,
+      note: document.getElementById('aNote').value.trim(), by: currentUser ? currentUser.name : '',
+      createdAt: old ? old.createdAt : new Date().toISOString()
+    });
+    await this.log(old ? 'update' : 'create', 'Activité: ' + document.getElementById('aType').value + ' ×' + qty);
+    App._editAct = null; this.closeModal(); this.toast('Enregistré'); this.nav('activities');
+  },
+  async deleteAct(id) {
+    if (!confirm('Supprimer cette activité ?')) return;
+    await dbDel('activities', id); await this.log('delete', 'Activité supprimée');
+    this.toast('Supprimé'); this.nav('activities');
+  },
+
+  async openObjectives() {
+    const obj = await this.getObjectives();
+    this.openModal('Objectifs', `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Global = objectif final ; Annuel = rythme de l'année. Les âmes et baptêmes enregistrés un par un dans DEME sont ajoutés automatiquement : ne saisir ici en nombre que ceux qui ne sont pas enregistrés.</div>
+      ${Object.entries(this.ACT_TYPES).map(([k, t]) => `<div style="font-weight:600;margin-top:6px">${t.icon} ${t.label}</div>
+        <div class="form-row"><div class="form-group"><label>Global</label><input type="number" id="oG_${k}" value="${(obj[k] || {}).g || ''}"></div>
+        <div class="form-group"><label>Annuel</label><input type="number" id="oA_${k}" value="${(obj[k] || {}).a || ''}"></div></div>`).join('')}
+      <button class="btn full" onclick="App.saveObjectives()">Enregistrer</button>`);
+  },
+  async saveObjectives() {
+    const v = {};
+    Object.keys(this.ACT_TYPES).forEach(k => {
+      v[k] = { g: parseInt(document.getElementById('oG_' + k).value, 10) || null, a: parseInt(document.getElementById('oA_' + k).value, 10) || null };
+    });
+    await dbPut('config', { key:'objectives', value:v });
+    await this.log('update', 'Objectifs modifiés');
+    this.closeModal(); this.toast('Objectifs enregistrés'); this.nav('activities');
+  },
+
+  async openWeekly(start) {
+    const [{ items }, zones, obj] = await Promise.all([this.activityItems(), dbAll('zones'), this.getObjectives()]);
+    const d = start ? new Date(start + 'T00:00:00') : new Date();
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const e = new Date(d); e.setDate(e.getDate() + 6);
+    const from = this.isoD(d), to = this.isoD(e);
+    let t = '*DEME – Résumé hebdomadaire*\nSemaine du ' + this.fmtD(from) + ' au ' + this.fmtD(to) + '\n\n';
+    Object.entries(this.ACT_TYPES).forEach(([k, T]) => {
+      const w = this.sumItems(items, k, from, to), tot = this.sumItems(items, k), o = obj[k] || {};
+      t += T.icon + ' ' + T.label + ' : *' + this.fmtN(w) + '*\n   Cumul : ' + this.fmtN(tot) + (o.g ? ' / ' + this.fmtN(o.g) + ' (' + this.pct(tot, o.g) + ' %)' : '') + '\n';
+    });
+    const zl = zones.map(z => {
+      const zi = items.filter(i => i.zoneId === z.id);
+      const parts = Object.entries(this.ACT_TYPES).map(([k, T]) => { const v = this.sumItems(zi, k, from, to); return v ? T.short + ' ' + this.fmtN(v) : null; }).filter(Boolean);
+      return parts.length ? '• ' + z.nom + ' : ' + parts.join(', ') : null;
+    }).filter(Boolean);
+    if (zl.length) t += '\n*Par zone*\n' + zl.join('\n') + '\n';
+    t += '\nGloire à Dieu pour la moisson !';
+    this.openModal('Résumé hebdomadaire', `
+      <div class="form-group"><label>Semaine du (lundi)</label><input type="date" id="wkDate" value="${from}" onchange="App.openWeekly(this.value)"></div>
+      <textarea id="wkText" rows="14" style="width:100%;font-size:13px">${this.esc(t)}</textarea>
+      <div class="btn-row" style="margin-top:8px"><button class="btn" onclick="App.sendWeekly()">📲 Envoyer sur WhatsApp</button><button class="btn secondary" onclick="App.copyWeekly()">📋 Copier</button></div>`);
+  },
+  sendWeekly() { window.open('https://wa.me/?text=' + encodeURIComponent(document.getElementById('wkText').value), '_blank'); },
+  async copyWeekly() {
+    const ta = document.getElementById('wkText');
+    try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); document.execCommand('copy'); }
+    this.toast('Résumé copié');
+  },
+
+  /* ============ PARAMÈTRES ============ */
+  async renderSettings() {
+    if (currentUser.role !== 'central') {
+      document.getElementById('main').innerHTML = `
+        <div class="perm-notice">
+          ⚠️ Seule la Direction Centrale peut accéder aux paramètres.
+        </div>
+      `;
+      return;
+    }
+
+    const audit = await dbAll('audit');
+    const users = await dbAll('users');
+
+    document.getElementById('main').innerHTML = `
+      <div class="card" style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd">
+        <h3>📦 Code de déploiement</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          Générez un code à envoyer à vos utilisateurs pour qu'ils configurent
+          leur application en un clic (structure + comptes).
+        </p>
+        <button class="btn purple full" onclick="App.renderDeployCodePage()">
+          📦 Générer un code de déploiement
+        </button>
+      </div>
+
+      <div class="card">
+        <h3>👥 Utilisateurs (${users.length})</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          Créez des comptes pour vos responsables. Chaque utilisateur reçoit un
+          nom et un code d'accès personnel.
+        </p>
+        <button class="btn full" onclick="App.openUserForm()" style="margin-bottom:12px">+ Nouvel utilisateur</button>
+        ${users.length === 0
+          ? '<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px">Aucun utilisateur créé</div>'
+          : users.map(u => `
+              <div class="user-item">
+                <span class="role ${u.role}">${ROLES[u.role].short}</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:600">${this.esc(u.name)}</div>
+                  <div style="font-size:12px;color:var(--muted)">
+                    Code : ${this.esc(u.code)} · ${u.active !== false ? 'Actif' : 'Désactivé'}
+                  </div>
+                </div>
+                <button class="btn small danger" onclick="App.deleteUser('${u.id}')">🗑️</button>
+              </div>
+            `).join('')}
+      </div>
+
+      <div class="card">
+        <h3>🔐 Mot de passe maître</h3>
+        <div class="form-group"><label>Nouveau mot de passe</label>
+          <input type="password" id="newPass" placeholder="Laisser vide pour ne pas changer"></div>
+        <button class="btn full" onclick="App.changePassword()">Changer</button>
+      </div>
+
+      <div class="card">
+        <h3>👤 Nom affiché</h3>
+        <div class="form-group"><input id="userName" value="${this.esc(currentUser.name)}"></div>
+        <button class="btn full" onclick="App.saveUserName()">Enregistrer</button>
+      </div>
+
+      <div class="card">
+        <h3>📜 Journal d'audit (${audit.length})</h3>
+        <div style="max-height:320px;overflow-y:auto">
+          ${audit.length === 0
+            ? '<div style="font-size:13px;color:var(--muted)">Aucune activité</div>'
+            : audit.slice().reverse().slice(0,100).map(a => `
+                <div class="history-item">
+                  <b>${new Date(a.date).toLocaleString('fr-FR')}</b>
+                  <span>${this.esc(a.user)} — ${this.esc(a.action)}${a.details?': '+this.esc(a.details):''}</span>
+                </div>
+              `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>ℹ️ À propos</h3>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7">
+          <b>DEME — Suivi des Âmes v3.0</b><br>
+          Département de l'École et du Ministère des Évangélistes<br>
+          Communauté Missionnaire Internationale Côte d'Ivoire<br><br>
+          Application 100% hors-ligne (IndexedDB)<br>
+          Photos · Graphiques · Multi-utilisateurs<br>
+          Code de déploiement · Choix du chemin d'export
+        </p>
+        <div class="author-signature" style="margin-top:16px;text-align:left;border:none;padding:12px;background:#f0f9ff;border-radius:10px">
+          <b>✍️ Conçu et développé par</b>
+          <div style="font-size:14px;font-weight:700;color:var(--primary);margin:6px 0">
+            Jean Marc Olivier KOFFI
+          </div>
+          <div class="disciple">
+            Disciple d'Ettien Antoine EDJA
+          </div>
+          <span class="tel">📞 07 47 28 46 94</span>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">
+            Application dédiée au service du DEME<br>
+            Pour la gloire de Dieu ✝️
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  openUserForm() {
+    this.openModal('Nouvel Utilisateur', `
+      <div class="form-group"><label class="form-required">Nom d'utilisateur</label>
+        <input id="uName" placeholder="Ex: pasteur_jean"></div>
+      <div class="form-group"><label class="form-required">Code d'accès</label>
+        <input id="uCode" placeholder="Ex: 1234"></div>
+      <div class="form-group"><label class="form-required">Rôle / Niveau</label>
+        <select id="uRole">
+          ${Object.entries(ROLES).filter(([k]) => k !== 'central').map(([k,r]) =>
+            `<option value="${k}">${r.label}</option>`
+          ).join('')}
+        </select></div>
+      <div class="form-group"><label>Zone / Secteur / Assemblée (optionnel)</label>
+        <input id="uScope" placeholder="Ex: Zone Abidjan"></div>
+      <button class="btn full" onclick="App.saveUser()">Créer le compte</button>
+    `);
+  },
+  async saveUser() {
+    const name = document.getElementById('uName').value.trim();
+    const code = document.getElementById('uCode').value.trim();
+    const role = document.getElementById('uRole').value;
+    if (!name) return this.toast('Nom requis');
+    if (!code) return this.toast('Code requis');
+
+    const users = await dbAll('users');
+    if (users.some(u => u.name.toLowerCase() === name.toLowerCase()))
+      return this.toast('Nom déjà utilisé');
+
+    await dbPut('users', {
+      id: uid(), name, code, role,
+      scope: document.getElementById('uScope').value.trim(),
+      active: true,
+      createdAt: new Date().toISOString()
+    });
+    await this.log('create','Utilisateur: '+name+' ('+ROLES[role].short+')');
+    this.closeModal(); this.toast('Utilisateur créé'); this.nav('settings');
+  },
+  async deleteUser(id) {
+    if (!confirm('Supprimer cet utilisateur ?')) return;
+    await dbDel('users', id);
+    this.toast('Utilisateur supprimé');
+    this.nav('settings');
+  },
+
+  async changePassword() {
+    const np = document.getElementById('newPass').value;
+    if (!np || np.length < 4) return this.toast('Mot de passe trop court (min 4)');
+    await dbPut('config', { key:'password', value:np });
+    await this.log('update','Mot de passe maître modifié');
+    document.getElementById('newPass').value = '';
+    this.toast('Mot de passe mis à jour');
+  },
+
+  async saveUserName() {
+    const n = document.getElementById('userName').value.trim();
+    if (!n) return this.toast('Nom requis');
+    currentUser.name = n;
+    if (currentUser.id === 'MASTER') {
+      await dbPut('config', { key:'masterUser', value: currentUser });
+    } else {
+      await dbPut('users', currentUser);
+    }
+    document.getElementById('sidebarRole').textContent = n;
+    this.toast('Nom enregistré');
+  },
+
+  quickAdd() {
+    if (!this.canAccess('souls')) return this.toast('Non autorisé');
+    if (currentPage === 'evangelists' && this.canAccess('evangelists')) this.openEvangelistForm();
+    else if (currentPage === 'structure' && this.canAccess('structure')) this.openZoneForm();
+    else this.openSoulForm();
+  }
+};
+
+/* ================= DÉMARRAGE ================= */
+window.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+  const p = document.getElementById('loginPassword');
+  if (p) p.addEventListener('keydown', e => { if (e.key === 'Enter') App.login(); });
+  const c = document.getElementById('loginUserCode');
+  if (c) c.addEventListener('keydown', e => { if (e.key === 'Enter') App.loginUser(); });
+});
+let lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouch <= 300) e.preventDefault();
+  lastTouch = now;
+}, { passive: false });
+
+/* ---------------- INSTALLATION (PWA) ---------------- */
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+(function () {
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (standalone) return;
+  let evt = null;
+  const bar = (html) => {
+    if (document.getElementById('installBar') || localStorage.getItem('deme_install_off')) return;
+    const d = document.createElement('div'); d.id = 'installBar';
+    d.style.cssText = 'position:fixed;left:10px;right:10px;bottom:48px;z-index:9998;background:#0e3a6b;color:#fff;border-radius:12px;padding:10px 12px;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3)';
+    d.innerHTML = '<div style="flex:1">' + html + '</div><button id="installGo" style="display:none;background:#e8a020;color:#0e3a6b;border:0;border-radius:8px;padding:8px 12px;font-weight:700">Installer</button><button id="installNo" style="background:none;border:0;color:#fff;font-size:18px">✕</button>';
+    document.body.appendChild(d);
+    document.getElementById('installNo').onclick = () => { localStorage.setItem('deme_install_off', '1'); d.remove(); };
+    if (evt) {
+      const g = document.getElementById('installGo'); g.style.display = 'block';
+      g.onclick = async () => { evt.prompt(); await evt.userChoice; evt = null; d.remove(); };
+    }
+  };
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); evt = e; bar('📲 Installer DEME sur cet appareil'); });
+  window.addEventListener('appinstalled', () => { const b = document.getElementById('installBar'); if (b) b.remove(); });
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) window.addEventListener('load', () => setTimeout(() => bar('📲 Pour installer : touchez <b>Partager</b> puis <b>Sur l’écran d’accueil</b>'), 2500));
+})();
+</script>
+</body>
+</html>
