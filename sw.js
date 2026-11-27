@@ -1,6 +1,6 @@
 /* DEME – service worker : l'application s'ouvre même sans réseau.
    Changer VERSION à chaque nouvelle mise en ligne pour que les téléphones se mettent à jour. */
-const VERSION = 'deme-v3.0';
+const VERSION = 'deme-v3.1';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
