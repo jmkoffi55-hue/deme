@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DEME">
-<title>DEME – Suivi des Âmes v3.3</title>
+<title>DEME – Suivi des Âmes v3.4</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -681,6 +681,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
       <li data-page="plans" onclick="App.nav('plans')">📅 Planification</li>
       <li data-page="prayer" onclick="App.nav('prayer')">🙏 Prière</li>
       <li data-page="fasting" onclick="App.nav('fasting')">🔥 Jeûne</li>
+      <li data-page="finance" onclick="App.nav('finance')">💰 Finance</li>
       <li data-page="activities" onclick="App.nav('activities')">🎯 Activités</li>
       <li data-page="souls" onclick="App.nav('souls')">🕊️ Âmes</li>
       <li data-page="stats" onclick="App.nav('stats')">📈 Statistiques</li>
@@ -698,7 +699,7 @@ input,select,textarea{font-family:inherit;font-size:15px}
   <main id="main" class="main"></main>
 
   <footer class="app-footer">
-    <b>DEME · Suivi des Âmes v3.3</b>
+    <b>DEME · Suivi des Âmes v3.4</b>
     Conçu par Jean Marc Olivier KOFFI<br>
     Disciple d'Ettien Antoine EDJA
     <span class="tel">📞 07 47 28 46 94</span>
@@ -729,10 +730,10 @@ input,select,textarea{font-family:inherit;font-size:15px}
    ================================================================ */
 
 const DB_NAME = 'deme_db';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const DEFAULT_PASSWORD = 'deme2026';
 const API_URL = localStorage.getItem('deme_api') || 'https://script.google.com/macros/s/AKfycbw9CILCyTzFzk23HgNOC17MVXiXtMjOr8uoAnYF7jRQwTunM78aX6RayV0lWAgzjyhz/exec';
-const SYNC_STORES = ['zones','subcenters','sectors','houses','evangelists','souls','activities','plans','prayers','fasts','fastpart'];
+const SYNC_STORES = ['zones','subcenters','sectors','houses','evangelists','souls','activities','plans','prayers','fasts','fastpart','finbudgets','fintx'];
 
 let db = null;
 let currentUser = null;
@@ -752,14 +753,14 @@ const ROLES = {
 };
 
 const PERMISSIONS = {
-  central:     ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer','settings'],
+  central:     ['dashboard','activities','plans','prayer','fasting','finance','structure','evangelists','souls','stats','transfer','settings'],
   zone:        ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
   sous:        ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
   secteur:     ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats','transfer'],
   evangeliste: ['dashboard','activities','plans','prayer','fasting','souls','stats'],
   ecole:       ['dashboard','activities','plans','prayer','fasting','structure','evangelists','souls','stats'],
   equipe:      ['dashboard','activities','plans','prayer','fasting','evangelists','souls','stats'],
-  tresorier:   ['dashboard'],
+  tresorier:   ['dashboard','finance'],
   pasteur:     ['dashboard','souls']
 };
 
@@ -780,7 +781,7 @@ function openDB() {
       if (!d.objectStoreNames.contains('users'))      d.createObjectStore('users', { keyPath:'id' });
       if (!d.objectStoreNames.contains('activities')) d.createObjectStore('activities', { keyPath:'id' });
       if (!d.objectStoreNames.contains('plans')) d.createObjectStore('plans', { keyPath:'id' });
-      ['prayers','fasts','fastpart'].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath:'id' }); });
+      ['prayers','fasts','fastpart','finbudgets','fintx'].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath:'id' }); });
     };
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e.target.error);
@@ -1066,7 +1067,7 @@ const App = {
     });
     const titles = {
       dashboard:'Tableau de bord', structure:'Structure DEME',
-      evangelists:'Évangélistes', plans:'Planification', prayer:'Prière', fasting:'Jeûne', activities:'Activités des évangélistes', souls:'Âmes', stats:'Statistiques',
+      evangelists:'Évangélistes', plans:'Planification', prayer:'Prière', fasting:'Jeûne', finance:'Finance', activities:'Activités des évangélistes', souls:'Âmes', stats:'Statistiques',
       transfer:'Import / Export', settings:'Paramètres'
     };
     document.getElementById('pageTitle').textContent = titles[page] || page;
@@ -1080,6 +1081,7 @@ const App = {
         plans: () => this.renderPlans(),
         prayer: () => this.renderPrayer(),
         fasting: () => this.renderFasting(),
+        finance: () => this.renderFinance(),
         activities: () => this.renderActivities(),
         souls: () => this.renderSouls(),
         stats: () => this.renderStats(),
@@ -2190,6 +2192,8 @@ const App = {
       prayers: await dbAll('prayers'),
       fasts: await dbAll('fasts'),
       fastpart: await dbAll('fastpart'),
+      finbudgets: await dbAll('finbudgets'),
+      fintx: await dbAll('fintx'),
       users: await dbAll('users')
     };
     const filename = `deme-export-${todayISO()}.json`;
@@ -2265,7 +2269,7 @@ const App = {
       const existingSouls = await dbAll('souls');
       const keys = new Set(existingSouls.map(s => (s.nom+'|'+(s.tel||'')).toLowerCase()));
 
-      for (const store of ['zones','subcenters','sectors','houses','evangelists','activities','plans','prayers','fasts','fastpart','users']) {
+      for (const store of ['zones','subcenters','sectors','houses','evangelists','activities','plans','prayers','fasts','fastpart','finbudgets','fintx','users']) {
         for (const item of (data[store]||[])) {
           const ex = await dbGet(store, item.id);
           if (!ex) { await dbPut(store, item); imp++; } else skip++;
@@ -2288,7 +2292,7 @@ const App = {
   async resetAll() {
     if (!confirm('Effacer TOUTES les données ?')) return;
     if (!confirm('Confirmation finale ?')) return;
-    for (const st of ['zones','subcenters','sectors','houses','evangelists','activities','plans','prayers','fasts','fastpart','souls','audit','users']) {
+    for (const st of ['zones','subcenters','sectors','houses','evangelists','activities','plans','prayers','fasts','fastpart','finbudgets','fintx','souls','audit','users']) {
       await dbClear(st);
     }
     this.toast('Données effacées');
@@ -2986,6 +2990,118 @@ const App = {
       <button class="btn full" style="margin-top:10px" onclick="App.openEvangelistForm('${id}')">✏️ Modifier la fiche</button>`);
   },
 
+
+  /* ============ FINANCE DU DÉPARTEMENT (direction et trésorier) ============ */
+  FIN_AXES: { traites:'Traités', ecole:'École / formation', caravane:'Caravanes', bapteme:'Baptêmes', jericho:'Opération Jéricho', fonctionnement:'Fonctionnement', autre:'Autre' },
+  FIN_CAT_IN: ['Contribution', 'Collecte', 'Soutien reçu', 'Autre entrée'],
+  FIN_CAT_OUT: ['Impression', 'Transport', 'Location', 'Matériel', 'Communication', 'Restauration', 'Autre dépense'],
+  MOIS: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+  fmtF(n) { return this.fmtN(Math.round(n || 0)) + ' F'; },
+  setFinYear(y) { App._finYear = y; this.renderFinance(); },
+  async renderFinance() {
+    const [tx, bud, plans, act] = await Promise.all([dbAll('fintx'), dbAll('finbudgets'), dbAll('plans'), this.activityItems()]);
+    const items = act.items;
+    const years = Array.from(new Set(tx.map(x => (x.date || '').slice(0, 4)).concat(bud.map(b => String(b.annee)), [String(new Date().getFullYear())]))).filter(Boolean).sort().reverse();
+    const year = App._finYear && years.indexOf(App._finYear) >= 0 ? App._finYear : String(new Date().getFullYear());
+    const T = tx.filter(x => (x.date || '').startsWith(year));
+    const sum = arr => arr.reduce((s, x) => s + (+x.montant || 0), 0);
+    const ent = sum(T.filter(x => x.sens === 'entree')), dep = sum(T.filter(x => x.sens === 'depense'));
+    const B = bud.filter(b => String(b.annee) === year), bTot = sum(B);
+    const stat = (v, l, c) => `<div class="card" style="flex:1;min-width:140px;text-align:center"><div style="font-size:18px;font-weight:700;color:${c || 'inherit'}">${v}</div><div style="font-size:12px;color:var(--muted)">${l}</div></div>`;
+    const rows = Object.entries(this.FIN_AXES).map(([k, l]) => ({ l, b:(B.find(x => x.axe === k) || {}).montant || 0, d:sum(T.filter(x => x.sens === 'depense' && x.axe === k)) })).filter(r => r.b || r.d);
+    const axeTbl = rows.length ? `<div class="card"><h3>Budget et dépenses par axe</h3>${rows.map(r => {
+      const p = this.pct(r.d, r.b);
+      return `<div style="padding:7px 0;border-top:1px solid var(--border);font-size:13px"><div style="display:flex;justify-content:space-between"><b>${r.l}</b><span>${this.fmtF(r.d)} / ${r.b ? this.fmtF(r.b) : 'non budgété'}</span></div>${r.b ? this.bar(p, p > 100 ? '#c0392b' : 'var(--primary)') + `<div style="font-size:12px;color:var(--muted)">${p} % consommé · reste ${this.fmtF(r.b - r.d)}</div>` : ''}</div>`;
+    }).join('')}</div>` : '';
+    const yr1 = year + '-01-01', yr2 = year + '-12-31';
+    const traites = this.sumItems(items, 'traites', yr1, yr2), ames = this.sumItems(items, 'ame', yr1, yr2);
+    const depTr = sum(T.filter(x => x.sens === 'depense' && x.axe === 'traites'));
+    const depEv = dep - sum(T.filter(x => x.sens === 'depense' && x.axe === 'fonctionnement'));
+    const mois = this.MOIS.map((m, i) => {
+      const pre = year + '-' + String(i + 1).padStart(2, '0'), M = T.filter(x => (x.date || '').startsWith(pre));
+      return { m, e:sum(M.filter(x => x.sens === 'entree')), d:sum(M.filter(x => x.sens === 'depense')), n:M.length };
+    }).filter(r => r.n);
+    const moisTbl = mois.length ? `<div class="card"><h3>Rapport mensuel ${year}</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:360px"><tr style="color:var(--muted)"><th style="text-align:left;padding:4px">Mois</th><th style="text-align:right">Entrées</th><th style="text-align:right">Dépenses</th><th style="text-align:right">Solde</th></tr>${mois.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:5px 4px">${r.m}</td><td style="text-align:right">${this.fmtF(r.e)}</td><td style="text-align:right">${this.fmtF(r.d)}</td><td style="text-align:right;font-weight:700">${this.fmtF(r.e - r.d)}</td></tr>`).join('')}</table></div></div>` : '';
+    const pl = id => { const p = plans.find(x => x.id === id); return p ? ((this.PLAN_TYPES[p.type] || {}).label || p.type) + ' ' + this.fmtD(p.date) : ''; };
+    const list = T.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 30).map(x => `
+      <div style="padding:8px 0;border-top:1px solid var(--border);font-size:13px">
+        <span style="float:right;white-space:nowrap"><button class="btn small secondary" style="padding:2px 8px" onclick="App.openTxForm('${x.id}')">✏️</button> <button class="btn small danger" style="padding:2px 8px" onclick="App.deleteTx('${x.id}')">🗑️</button></span>
+        ${x.sens === 'entree' ? '⬆️' : '⬇️'} <b>${this.fmtF(x.montant)}</b> · ${this.fmtD(x.date)}<br>
+        <span style="color:var(--muted)">${[this.FIN_AXES[x.axe], x.cat, x.libelle, x.tiers, x.piece ? 'pièce ' + x.piece : '', pl(x.planId)].filter(Boolean).map(s => this.esc(s)).join(' · ')}</span></div>`).join('');
+    document.getElementById('main').innerHTML = `
+      <div class="btn-row"><button class="btn" onclick="App.openTxForm(null,'depense')">+ Dépense</button><button class="btn secondary" onclick="App.openTxForm(null,'entree')">+ Entrée</button><button class="btn secondary" onclick="App.openBudget('${year}')">Budget ${year}</button><button class="btn secondary" onclick="App.exportFinCsv()">⬇ Excel (CSV)</button></div>
+      <div class="form-group" style="max-width:200px"><label>Année</label><select onchange="App.setFinYear(this.value)">${years.map(y => `<option ${y === year ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${stat(this.fmtF(ent), 'Entrées')}${stat(this.fmtF(dep), 'Dépenses')}${stat(this.fmtF(ent - dep), 'Solde', ent - dep < 0 ? '#c0392b' : '#2e8b57')}${stat(bTot ? this.pct(dep, bTot) + ' %' : '—', 'Budget consommé')}</div>
+      <div class="card"><h3>Coûts de l’évangélisation ${year}</h3>
+        <div style="font-size:13px">Coût par traité distribué : <b>${traites ? this.fmtF(depTr / traites) : '—'}</b> <span style="color:var(--muted)">(${this.fmtN(traites)} traités)</span></div>
+        <div style="font-size:13px">Coût par âme gagnée : <b>${ames ? this.fmtF(depEv / ames) : '—'}</b> <span style="color:var(--muted)">(dépenses hors fonctionnement ÷ ${this.fmtN(ames)} âmes)</span></div></div>
+      ${axeTbl}${moisTbl}
+      <div class="card"><h3>Dernières opérations</h3>${list || '<div class="empty"><div class="msg">Aucune opération enregistrée</div></div>'}</div>`;
+  },
+  async openTxForm(id, sens) {
+    const plans = await dbAll('plans');
+    const x = id ? await dbGet('fintx', id) : { sens:sens || 'depense', date:this.isoD(new Date()) };
+    if (!x) return;
+    App._editTx = id || null; App._txSens = x.sens;
+    const out = x.sens === 'depense', cats = out ? this.FIN_CAT_OUT : this.FIN_CAT_IN;
+    const pl = plans.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 100);
+    this.openModal((id ? 'Modifier' : 'Nouvelle') + (out ? ' dépense' : ' entrée'), `
+      <div class="form-row">
+        <div class="form-group"><label class="form-required">Date</label><input type="date" id="txDate" value="${x.date || ''}"></div>
+        <div class="form-group"><label class="form-required">Montant (FCFA)</label><input type="number" min="1" id="txMontant" value="${x.montant || ''}"></div>
+      </div>
+      <div class="form-group"><label>${out ? 'Axe' : 'Axe concerné'}</label><select id="txAxe">${out ? '' : '<option value="">— Général —</option>'}${Object.entries(this.FIN_AXES).map(([k, l]) => `<option value="${k}" ${k === x.axe ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Catégorie</label><select id="txCat">${cats.map(c => `<option ${c === x.cat ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Libellé</label><input id="txLib" value="${this.esc(x.libelle || '')}"></div>
+      <div class="form-group"><label>${out ? 'Bénéficiaire / fournisseur' : 'Source'}</label><input id="txTiers" value="${this.esc(x.tiers || '')}"></div>
+      <div class="form-group"><label>Référence de la pièce justificative</label><input id="txPiece" value="${this.esc(x.piece || '')}"></div>
+      <div class="form-group"><label>Activité programmée liée</label><select id="txPlan"><option value="">—</option>${pl.map(p => `<option value="${p.id}" ${p.id === x.planId ? 'selected' : ''}>${this.fmtD(p.date)} – ${this.esc(p.titre || (this.PLAN_TYPES[p.type] || {}).label || p.type)}</option>`).join('')}</select></div>
+      <button class="btn full" onclick="App.saveTx()">Enregistrer</button>`);
+  },
+  async saveTx() {
+    const g = k => document.getElementById(k).value;
+    const montant = parseInt(g('txMontant'), 10);
+    if (!g('txDate')) return this.toast('Date requise');
+    if (!montant || montant < 1) return this.toast('Montant requis');
+    const old = App._editTx ? await dbGet('fintx', App._editTx) : null;
+    await dbPut('fintx', { ...(old || {}), id: old ? old.id : uid(), sens:App._txSens, date:g('txDate'), montant, axe:g('txAxe'), cat:g('txCat'), libelle:g('txLib').trim(), tiers:g('txTiers').trim(), piece:g('txPiece').trim(), planId:g('txPlan'),
+      by: currentUser ? currentUser.name : '', createdAt: old ? old.createdAt : new Date().toISOString() });
+    await this.log(old ? 'update' : 'create', 'Finance: ' + App._txSens);
+    App._editTx = null; this.closeModal(); this.toast('Enregistré'); this.nav('finance');
+  },
+  async deleteTx(id) {
+    if (!confirm('Supprimer cette opération ?')) return;
+    await dbDel('fintx', id); this.toast('Supprimé'); this.nav('finance');
+  },
+  async openBudget(year) {
+    const y = String(year || new Date().getFullYear());
+    const B = (await dbAll('finbudgets')).filter(b => String(b.annee) === y);
+    this.openModal('Budget annuel', `
+      <div class="form-group"><label>Année</label><input type="number" id="bYear" value="${y}" onchange="App.openBudget(this.value)"></div>
+      ${Object.entries(this.FIN_AXES).map(([k, l]) => `<div class="form-group"><label>${l} (FCFA)</label><input type="number" min="0" id="bA_${k}" value="${(B.find(b => b.axe === k) || {}).montant || ''}"></div>`).join('')}
+      <button class="btn full" onclick="App.saveBudget()">Enregistrer</button>`);
+  },
+  async saveBudget() {
+    const y = String(parseInt(document.getElementById('bYear').value, 10) || new Date().getFullYear());
+    for (const k of Object.keys(this.FIN_AXES)) {
+      const m = parseInt(document.getElementById('bA_' + k).value, 10) || 0, id = 'b-' + y + '-' + k;
+      if (m > 0) await dbPut('finbudgets', { id, annee:y, axe:k, montant:m });
+      else if (await dbGet('finbudgets', id)) await dbDel('finbudgets', id);
+    }
+    await this.log('update', 'Budget ' + y);
+    App._finYear = y; this.closeModal(); this.toast('Budget enregistré'); this.nav('finance');
+  },
+  async exportFinCsv() {
+    const year = App._finYear || String(new Date().getFullYear());
+    const tx = (await dbAll('fintx')).filter(x => (x.date || '').startsWith(year)).sort((a, b) => a.date.localeCompare(b.date));
+    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lines = [['Date', 'Sens', 'Axe', 'Catégorie', 'Libellé', 'Tiers', 'Pièce', 'Montant (FCFA)'].map(q).join(';')]
+      .concat(tx.map(x => [x.date, x.sens === 'entree' ? 'Entrée' : 'Dépense', this.FIN_AXES[x.axe] || '', x.cat, x.libelle, x.tiers, x.piece, x.montant].map(q).join(';')));
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type:'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'DEME-finance-' + year + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  },
+
   /* ============ PARAMÈTRES ============ */
   async renderSettings() {
     if (currentUser.role !== 'central') {
@@ -3065,7 +3181,7 @@ const App = {
       <div class="card">
         <h3>ℹ️ À propos</h3>
         <p style="font-size:13px;color:var(--muted);line-height:1.7">
-          <b>DEME — Suivi des Âmes v3.3</b><br>
+          <b>DEME — Suivi des Âmes v3.4</b><br>
           Département de l'École et du Ministère des Évangélistes<br>
           Communauté Missionnaire Internationale Côte d'Ivoire<br><br>
           Application 100% hors-ligne (IndexedDB)<br>
